@@ -1,30 +1,45 @@
-# React dashboard design
+# 🖥️ Proxpanel - VPS Management Dashboard
 
-*Automatically synced with your [v0.dev](https://v0.dev) deployments*
+A powerful, modern web interface for managing Proxmox-based virtual machines. Devloo Hosting provides a user-friendly, professional-grade experience for hosting providers, infrastructure admins, and end users.
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/bohannonaarons-projects/v0-react-dashboard-design)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.dev-black?style=for-the-badge)](https://v0.dev/chat/projects/uJDKkmhXLhm)
+---
 
-## Overview
+## 🎯 Features
 
-This repository will stay in sync with your deployed chats on [v0.dev](https://v0.dev).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.dev](https://v0.dev).
+- **Real-Time Metrics**: Monitor CPU, memory, network, and uptime across your infrastructure.
+- **VPS Lifecycle Management**: Start, stop, reboot, and reinstall virtual machines.
+- **User-Friendly Interface**: Clean UI with accessibility, responsiveness, and dark/light theme support.
+- **SSH Access Panel**: Copy-paste connection info and auto-generate SSH commands.
+- **Firewall & Network Configuration**: Manage IPv4/IPv6, gateways, ports, and DNS.
+- **Backup Tools** *(Coming Soon)*: Schedule, manage, and restore backups.
+- **OS Reinstallation**: Safely reinstall Linux and Windows operating systems with a click.
+- **Admin Panel**: Alerts, uptime tracking, cost overview, and real-time infrastructure health.
+- **Multi-location Node Support**: Manage VPS across different data centers.
 
-## Deployment
 
-Your project is live at:
-
-**[https://vercel.com/bohannonaarons-projects/v0-react-dashboard-design](https://vercel.com/bohannonaarons-projects/v0-react-dashboard-design)**
-
-## Build your app
-
-Continue building your app on:
-
-**[https://v0.dev/chat/projects/uJDKkmhXLhm](https://v0.dev/chat/projects/uJDKkmhXLhm)**
-
-## How It Works
-
-1. Create and modify your project using [v0.dev](https://v0.dev)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+> ⚠️ **Disclaimer**
+>
+> This project is provided **as-is**, without any express or implied warranties.  
+> Use is permitted under the terms of the **MIT License**, but **at your own risk**.
+>
+> ### 🛠️ For Production Use:
+> - This software directly interfaces with **Proxmox VE** and virtual machine infrastructure.
+> - Improper configuration may lead to **data loss**, **security breaches**, or **system downtime**.
+> - Always test thoroughly in a **development or staging environment** before deploying in production.
+> - It is **your responsibility** to ensure proper backups, access controls, and security policies.
+>
+> ### 🏢 For Company/Internal Use:
+> - If using in an organizational or corporate context, ensure use complies with your company's **IT and security policies**.
+> - This software does not come with commercial support; use in **enterprise environments is not officially supported**.
+>
+> ### 🔐 On Privacy & GDPR Compliance:
+> - This dashboard may handle **user credentials**, **hostnames**, **IP addresses**, and potentially **PII**.
+> - You are responsible for ensuring that your implementation complies with **GDPR**, **CCPA**, or any other applicable data privacy regulations.
+> - This software does not collect telemetry or external analytics by default.
+>
+> ### 📜 Open Source License Notice:
+> - Licensed under the [MIT License](LICENSE).
+> - You are free to **use, modify, and distribute** this code, provided you retain the license and copyright.
+> - Contributions to this project must also comply with the terms of the MIT License.
+>
+> By using or deploying this project, you acknowledge that the developers are **not liable** for any issues or damages that may arise.
