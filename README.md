@@ -34,11 +34,11 @@
 <div align="center">
 
 ### 🏠 **Dashboard Overview**
-![Dashboard](./public/images/proxpanel-dashboard.png)
+![Dashboard Overview](./public/images/proxpanel-dashboard.png)
 *Real-time VPS monitoring with performance metrics and resource usage*
 
 ### 🔐 **Login Interface**
-![Login](./public/images/proxpanel-login.png)
+![Login Interface](./public/images/proxpanel-login.png)
 *Clean, professional authentication interface*
 
 ### 🖥️ **VPS Management**
@@ -46,23 +46,23 @@
 *Comprehensive VM control panel with power management and SSH access*
 
 ### 📊 **Performance Monitoring**
-![Monitoring](./public/images/proxpanel-monitoring.png)
+![Performance Monitoring](./public/images/proxpanel-monitoring.png)
 *Advanced analytics with historical data and real-time charts*
 
 ### 🌐 **Network Configuration**
-![Networking](./public/images/proxpanel-networking.png)
+![Network Configuration](./public/images/proxpanel-networking.png)
 *Network management with firewall rules and IP configuration*
 
 ### 🔧 **SSH Connection Panel**
-![SSH Panel](./public/images/proxpanel-ssh-panel.png)
+![SSH Connection Panel](./public/images/proxpanel-ssh-panel.png)
 *Easy SSH access with connection details and password management*
 
 ### 💿 **OS Reinstallation**
-![OS Reinstall](./public/images/proxpanel-os-reinstall.png)
+![OS Reinstallation](./public/images/proxpanel-os-reinstall.png)
 *Safe operating system reinstallation with confirmation dialogs*
 
 ### 📱 **Mobile Interface**
-![Mobile](./public/images/proxpanel-mobile.png)
+![Mobile Interface](./public/images/proxpanel-mobile.png)
 *Fully responsive design optimized for mobile devices*
 
 </div>
@@ -135,7 +135,7 @@ npm run dev
 \`\`\`
 
 Visit `http://localhost:3000` and login with:
-- **Email**: admin@proxpanel.com
+- **Username**: admin
 - **Password**: ProxPanel2024!
 
 ## 🔧 Proxmox API Token Setup
@@ -224,12 +224,12 @@ docker-compose exec -i mysql mysql -u root -p proxpanel_db < backup.sql
 After seeding the database, these accounts are available:
 
 ### Administrator Account
-- **Email**: admin@proxpanel.com
+- **Username**: admin
 - **Password**: ProxPanel2024!
 - **Permissions**: Full system access
 
 ### Demo Account
-- **Email**: demo@proxpanel.com
+- **Username**: demo
 - **Password**: DemoUser2024!
 - **Permissions**: Limited access with sample VMs
 
@@ -299,7 +299,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ### Community Support
 - **GitHub Issues**: Bug reports and feature requests
 - **Discord**: Real-time community support
-- **Email**: support@proxpanel.com
 
 ---
 
