@@ -44,44 +44,6 @@
 - **Alert System** - Proactive monitoring and notifications
 - **Health Checks** - Automated system health monitoring
 
-## 📸 Screenshots
-
-<div align="center">
-
-### 🏠 **Dashboard Overview**
-![Dashboard Overview](./public/images/proxpanel-dashboard.png)
-*Real-time VPS monitoring with performance metrics and resource usage*
-
-### 🔐 **Login Interface**
-![Login Interface](./public/images/proxpanel-login.png)
-*Clean, professional authentication interface*
-
-### 🖥️ **VPS Management**
-![VPS Management](./public/images/proxpanel-vps-detail.png)
-*Comprehensive VM control panel with power management and SSH access*
-
-### 📊 **Performance Monitoring**
-![Performance Monitoring](./public/images/proxpanel-monitoring.png)
-*Advanced analytics with historical data and real-time charts*
-
-### 🌐 **Network Configuration**
-![Network Configuration](./public/images/proxpanel-networking.png)
-*Network management with firewall rules and IP configuration*
-
-### 🔧 **SSH Connection Panel**
-![SSH Connection Panel](./public/images/proxpanel-ssh-panel.png)
-*Easy SSH access with connection details and password management*
-
-### 💿 **OS Reinstallation**
-![OS Reinstallation](./public/images/proxpanel-os-reinstall.png)
-*Safe operating system reinstallation with confirmation dialogs*
-
-### 📱 **Mobile Interface**
-![Mobile Interface](./public/images/proxpanel-mobile.png)
-*Fully responsive design optimized for mobile devices*
-
-</div>
-
 ## 🛠️ Technology Stack
 
 - **Frontend**: Next.js 14, React 18, TypeScript
@@ -111,7 +73,7 @@
 
 1. **Clone the repository**
    \`\`\`bash
-   git clone https://github.com/your-org/proxpanel.git
+   git clone https://github.com/turbskiiii/proxpanel.git
    cd proxpanel
    \`\`\`
 
@@ -348,9 +310,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🆘 Support
 
-- **Documentation**: [GitHub Wiki](https://github.com/your-org/proxpanel/wiki)
-- **Issues**: [GitHub Issues](https://github.com/your-org/proxpanel/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-org/proxpanel/discussions)
+- **Documentation**: [GitHub Wiki](https://github.com/turbskiiii/proxpanel/wiki)
+- **Issues**: [GitHub Issues](https://github.com/turbskiiii/proxpanel/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/turbskiiii/proxpanel/discussions)
 
 ## 🙏 Acknowledgments
 
