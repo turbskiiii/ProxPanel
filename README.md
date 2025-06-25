@@ -1,6 +1,9 @@
 # 🖥️ ProxPanel - VPS Management Dashboard
 
-![ProxPanel Hero](./public/images/proxpanel-dashboard.png)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue)](https://www.typescriptlang.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-14.0-black)](https://nextjs.org/)
 
 *A modern, professional web-based dashboard for managing Proxmox VE virtual private servers. Built with Next.js, TypeScript, and Tailwind CSS.*
 
@@ -8,26 +11,38 @@
 
 ## 🚀 Features
 
-### Core VPS Management
+### 🎛️ **VPS Management**
+- **Complete Lifecycle Management** - Create, start, stop, restart, and delete VPS instances
 - **Real-time Monitoring** - Live CPU, memory, disk, and network metrics
-- **Power Management** - Start, stop, reboot, and reset VMs with one click
-- **SSH Access** - Easy-to-copy SSH connection details with password management
-- **OS Reinstallation** - Reinstall operating systems with safety confirmations
-- **Resource Scaling** - Upgrade/downgrade CPU, memory, and storage
+- **Resource Management** - Flexible resource allocation and scaling
+- **Multiple OS Support** - Ubuntu, Debian, CentOS, Alpine, and custom templates
+- **SSH Access Management** - Secure shell access with custom port configuration
 
-### Advanced Features
-- **Automated Backups** - Scheduled snapshots with configurable retention
-- **Network Management** - Firewall rules, DNS settings, and traffic monitoring
-- **Security Dashboard** - DDoS protection, SSL certificates, vulnerability scanning
-- **Performance Analytics** - Historical metrics and performance benchmarking
-- **Multi-user Support** - Role-based access control and user management
+### 👥 **User Management**
+- **Multi-tenant Architecture** - Isolated user environments
+- **Role-based Access Control** - Admin, moderator, and user roles
+- **User Dashboard** - Personalized control panel for each user
+- **Account Management** - Registration, authentication, and profile management
 
-### Technical Highlights
-- **Proxmox API Integration** - Native PVE API token authentication
-- **Real-time Updates** - WebSocket connections for live data
-- **Responsive Design** - Mobile-friendly interface
-- **Security First** - JWT authentication, rate limiting, input validation
-- **Database Driven** - MySQL backend with comprehensive logging
+### 🔧 **Admin Panel**
+- **System Overview** - Comprehensive dashboard with key metrics
+- **User Administration** - Complete user lifecycle management
+- **Audit Logging** - Detailed activity tracking and compliance
+- **Server Monitoring** - Real-time server health and performance
+- **Security Center** - Security alerts and threat monitoring
+
+### 🔒 **Security & Compliance**
+- **JWT Authentication** - Secure token-based authentication
+- **Rate Limiting** - Protection against abuse and DDoS
+- **Input Validation** - Comprehensive data validation with Zod
+- **Audit Trail** - Complete activity logging for compliance
+- **Security Headers** - OWASP-compliant security headers
+
+### 📊 **Monitoring & Analytics**
+- **Real-time Metrics** - Live performance monitoring
+- **Historical Data** - Trend analysis and capacity planning
+- **Alert System** - Proactive monitoring and notifications
+- **Health Checks** - Automated system health monitoring
 
 ## 📸 Screenshots
 
@@ -85,205 +100,247 @@
 
 ## 🚀 Quick Start
 
-### 1. Clone and Install
-\`\`\`bash
-git clone https://github.com/your-org/proxpanel.git
-cd proxpanel
-npm install
-\`\`\`
+### Prerequisites
 
-### 2. Environment Configuration
-Copy the example environment file and configure your settings:
+- **Node.js** 18.0.0 or higher
+- **MySQL** 8.0 or higher
+- **Proxmox VE** 7.0 or higher
+- **Docker** (optional, for containerized deployment)
 
-\`\`\`bash
-cp .env.example .env.local
-\`\`\`
+### Installation
 
-Edit `.env.local` with your configuration:
+1. **Clone the repository**
+   \`\`\`bash
+   git clone https://github.com/your-org/proxpanel.git
+   cd proxpanel
+   \`\`\`
 
-\`\`\`env
-# Database
-DB_HOST=localhost
-DB_PORT=3306
-DB_USER=proxpanel
-DB_PASSWORD=your_secure_password
-DB_NAME=proxpanel_db
+2. **Install dependencies**
+   \`\`\`bash
+   npm install
+   \`\`\`
 
-# JWT Authentication
-JWT_SECRET=your_super_secret_jwt_key_minimum_32_characters
+3. **Set up environment variables**
+   \`\`\`bash
+   cp env.example .env
+   # Edit .env with your configuration
+   \`\`\`
 
-# Proxmox API (Recommended: API Token)
-PROXMOX_HOST=your-proxmox-server.com
-PROXMOX_PORT=8006
-PROXMOX_TOKEN_ID=root@pam!proxpanel
-PROXMOX_TOKEN_SECRET=your-api-token-secret
-PROXMOX_VERIFY_SSL=true
-\`\`\`
+4. **Initialize the database**
+   \`\`\`bash
+   # Create database and tables
+   mysql -u root -p < database/schema.sql
+   
+   # Load sample data (optional)
+   mysql -u root -p < database/seed.sql
+   \`\`\`
 
-### 3. Database Setup
-\`\`\`bash
-# Run database migrations
-npm run db:migrate
+5. **Validate environment**
+   \`\`\`bash
+   npm run validate-env
+   \`\`\`
 
-# Seed with sample data
-npm run db:seed
-\`\`\`
+6. **Start the development server**
+   \`\`\`bash
+   npm run dev
+   \`\`\`
 
-### 4. Development Server
-\`\`\`bash
-npm run dev
-\`\`\`
-
-Visit `http://localhost:3000` and login with:
-- **Username**: admin
-- **Password**: ProxPanel2024!
-
-## 🔧 Proxmox API Token Setup
-
-For secure API access, create an API token in Proxmox:
-
-### 1. Create API Token
-\`\`\`bash
-# In Proxmox shell
-pveum user token add root@pam proxpanel --privsep=0
-\`\`\`
-
-### 2. Set Permissions
-\`\`\`bash
-# Grant necessary permissions
-pveum acl modify / --users root@pam --roles Administrator
-\`\`\`
-
-### 3. Configure Environment
-Add the token to your `.env.local`:
-\`\`\`env
-PROXMOX_TOKEN_ID=root@pam!proxpanel
-PROXMOX_TOKEN_SECRET=your-generated-token-secret
-\`\`\`
+7. **Access the application**
+   - Dashboard: http://localhost:3000
+   - Admin Panel: http://localhost:3000/admin
 
 ## 🐳 Docker Deployment
 
-### Production Deployment
+### Development
 \`\`\`bash
-# Build and start all services
 docker-compose up -d
-
-# Check service health
-docker-compose ps
 \`\`\`
 
-### Services Included
-- **ProxPanel App** - Main application (port 3000)
-- **MySQL Database** - Data storage (port 3306)
-- **Redis Cache** - Session storage (port 6379)
-- **Nginx Proxy** - SSL termination and load balancing (ports 80/443)
-
-## 🔒 Security Configuration
-
-### SSL Certificates
-Place your SSL certificates in the `ssl/` directory:
-\`\`\`
-ssl/
-├── cert.pem
-└── key.pem
-\`\`\`
-
-### Firewall Rules
-Configure your firewall to allow:
-- Port 80 (HTTP - redirects to HTTPS)
-- Port 443 (HTTPS)
-- Port 8006 (Proxmox API - internal only)
-
-### Rate Limiting
-Built-in rate limiting protects against abuse:
-- API routes: 100 requests per 15 minutes
-- Login attempts: 5 attempts per 15 minutes
-
-## 📊 Monitoring & Maintenance
-
-### Health Checks
+### Production
 \`\`\`bash
-# Check application health
-curl http://localhost:3000/api/health
+# Set environment variables
+export DB_USER=your_db_user
+export DB_PASSWORD=your_db_password
+export JWT_SECRET=your_jwt_secret
+# ... other variables
 
-# View application logs
-docker-compose logs -f app
+# Deploy
+npm run deploy:prod
 \`\`\`
 
-### Database Maintenance
+## 📋 Environment Variables
+
+### Required Variables
 \`\`\`bash
+# Database Configuration
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=your_db_user
+DB_PASSWORD=your_db_password
+DB_NAME=proxpanel
+
+# JWT Secret (minimum 32 characters)
+JWT_SECRET=your_super_secret_jwt_key_here
+
+# Proxmox Configuration
+PROXMOX_HOST=your-proxmox-server.com
+PROXMOX_PORT=8006
+PROXMOX_USERNAME=root
+PROXMOX_PASSWORD=your_proxmox_password
+PROXMOX_REALM=pam
+\`\`\`
+
+### Optional Variables
+\`\`\`bash
+# Application
+NODE_ENV=production
+APP_URL=https://your-domain.com
+LOG_LEVEL=info
+
+# Email (for notifications)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your_email@gmail.com
+SMTP_PASSWORD=your_email_password
+\`\`\`
+
+## 🧪 Testing
+
+\`\`\`bash
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run tests with coverage
+npm run test:coverage
+
+# Run tests for CI
+npm run test:ci
+\`\`\`
+
+## 🔧 Development
+
+### Code Quality
+\`\`\`bash
+# Lint code
+npm run lint
+
+# Fix linting issues
+npm run lint:fix
+
+# Type checking
+npm run type-check
+
+# Format code
+npm run format
+\`\`\`
+
+### Database Operations
+\`\`\`bash
+# Run migrations
+npm run db:migrate
+
+# Seed database
+npm run db:seed
+
 # Backup database
-docker-compose exec mysql mysqldump -u root -p proxpanel_db > backup.sql
-
-# Restore database
-docker-compose exec -i mysql mysql -u root -p proxpanel_db < backup.sql
+npm run db:backup
 \`\`\`
 
-## 🔧 Default Accounts
+## 📚 API Documentation
 
-After seeding the database, these accounts are available:
+### Authentication Endpoints
+- `POST /api/auth/login` - User login
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/logout` - User logout
+- `GET /api/auth/me` - Get current user
 
-### Administrator Account
-- **Username**: admin
-- **Password**: ProxPanel2024!
-- **Permissions**: Full system access
+### VPS Management Endpoints
+- `GET /api/vps` - List user VPS instances
+- `POST /api/vps` - Create new VPS
+- `GET /api/vps/[id]` - Get VPS details
+- `PUT /api/vps/[id]` - Update VPS
+- `DELETE /api/vps/[id]` - Delete VPS
+- `POST /api/vps/[id]/power` - Power management
+- `POST /api/vps/[id]/password` - Reset root password
 
-### Demo Account
-- **Username**: demo
-- **Password**: DemoUser2024!
-- **Permissions**: Limited access with sample VMs
+### Admin Endpoints
+- `GET /api/admin/stats` - System statistics
+- `GET /api/admin/users` - User management
+- `GET /api/admin/audit` - Audit logs
 
-**⚠️ Important**: Change default passwords immediately in production!
+## 🏗️ Architecture
 
-## 🐛 Troubleshooting
+### Technology Stack
+- **Frontend**: Next.js 14, React 18, TypeScript
+- **Styling**: Tailwind CSS, shadcn/ui components
+- **Backend**: Next.js API Routes, Node.js
+- **Database**: MySQL 8.0
+- **Authentication**: JWT with HTTP-only cookies
+- **Validation**: Zod schema validation
+- **Testing**: Jest, React Testing Library
 
-### Common Issues
-
-#### Proxmox Connection Failed
-\`\`\`bash
-# Test API connectivity
-curl -k https://your-proxmox-server:8006/api2/json/version
-
-# Verify token permissions
-pveum user token list root@pam
+### Project Structure
+\`\`\`
+proxpanel/
+├── app/                    # Next.js app directory
+│   ├── api/               # API routes
+│   ├── dashboard/         # User dashboard
+│   ├── admin/            # Admin panel
+│   └── (auth)/           # Authentication pages
+├── components/            # React components
+├── lib/                  # Utility libraries
+├── database/             # Database schema and migrations
+├── scripts/              # Deployment and utility scripts
+├── __tests__/            # Test files
+└── public/               # Static assets
 \`\`\`
 
-#### Database Connection Issues
-\`\`\`bash
-# Check MySQL status
-docker-compose exec mysql mysql -u root -p -e "SELECT 1"
+## 🔒 Security
 
-# View database logs
-docker-compose logs mysql
-\`\`\`
+### Security Features
+- **Input Validation** - All inputs validated with Zod schemas
+- **Rate Limiting** - API endpoint protection
+- **SQL Injection Prevention** - Parameterized queries
+- **XSS Protection** - Content Security Policy headers
+- **CSRF Protection** - SameSite cookie configuration
+- **Secure Headers** - OWASP-compliant security headers
 
-#### SSL Certificate Problems
-\`\`\`bash
-# Verify certificate validity
-openssl x509 -in ssl/cert.pem -text -noout
+### Security Best Practices
+- Regular security audits with `npm audit`
+- Environment variable validation
+- Comprehensive logging and monitoring
+- Secure password hashing with bcrypt
+- JWT token expiration and rotation
 
-# Check certificate chain
-openssl verify -CAfile ssl/chain.pem ssl/cert.pem
-\`\`\`
+## 📈 Performance
+
+### Optimization Features
+- **Server-Side Rendering** - Fast initial page loads
+- **Static Generation** - Optimized static pages
+- **Image Optimization** - Next.js image optimization
+- **Code Splitting** - Automatic code splitting
+- **Caching** - Intelligent caching strategies
+
+### Monitoring
+- Health check endpoints
+- Performance metrics collection
+- Error tracking and logging
+- Resource usage monitoring
 
 ## 🤝 Contributing
 
 We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
 
-### Development Setup
-\`\`\`bash
-# Fork and clone the repository
-git clone https://github.com/your-username/proxpanel.git
-
-# Create a feature branch
-git checkout -b feature/amazing-feature
-
-# Make your changes and commit
-git commit -m "Add amazing feature"
-
-# Push to your fork and create a pull request
-git push origin feature/amazing-feature
-\`\`\`
+### Development Workflow
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new functionality
+5. Ensure all tests pass
+6. Submit a pull request
 
 ## 📄 License
 
@@ -291,42 +348,17 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🆘 Support
 
-### Documentation
-- [API Documentation](docs/api.md)
-- [Deployment Guide](docs/deployment.md)
-- [Security Best Practices](docs/security.md)
+- **Documentation**: [GitHub Wiki](https://github.com/your-org/proxpanel/wiki)
+- **Issues**: [GitHub Issues](https://github.com/your-org/proxpanel/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/your-org/proxpanel/discussions)
 
-### Community Support
-- **GitHub Issues**: Bug reports and feature requests
-- **Discord**: Real-time community support
+## 🙏 Acknowledgments
+
+- [Next.js](https://nextjs.org/) - The React framework for production
+- [shadcn/ui](https://ui.shadcn.com/) - Beautiful UI components
+- [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS framework
+- [Proxmox VE](https://www.proxmox.com/) - Virtualization platform
 
 ---
 
-**ProxPanel** - Professional Proxmox VPS Management Made Simple
-
-> ⚠️ **Disclaimer**
->
-> This project is provided **as-is**, without any express or implied warranties.  
-> Use is permitted under the terms of the **MIT License**, but **at your own risk**.
->
-> ### 🛠️ For Production Use:
-> - This software directly interfaces with **Proxmox VE** and virtual machine infrastructure.
-> - Improper configuration may lead to **data loss**, **security breaches**, or **system downtime**.
-> - Always test thoroughly in a **development or staging environment** before deploying in production.
-> - It is **your responsibility** to ensure proper backups, access controls, and security policies.
->
-> ### 🏢 For Company/Internal Use:
-> - If using in an organizational or corporate context, ensure use complies with your company's **IT and security policies**.
-> - This software does not come with commercial support; use in **enterprise environments is not officially supported**.
->
-> ### 🔐 On Privacy & GDPR Compliance:
-> - This dashboard may handle **user credentials**, **hostnames**, **IP addresses**, and potentially **PII**.
-> - You are responsible for ensuring that your implementation complies with **GDPR**, **CCPA**, or any other applicable data privacy regulations.
-> - This software does not collect telemetry or external analytics by default.
->
-> ### 📜 Open Source License Notice:
-> - Licensed under the [MIT License](LICENSE).
-> - You are free to **use, modify, and distribute** this code, provided you retain the license and copyright.
-> - Contributions to this project must also comply with the terms of the MIT License.
->
-> By using or deploying this project, you acknowledge that the developers are **not liable** for any issues or damages that may arise.
+**ProxPanel** - Professional VPS Management Made Simple 🚀

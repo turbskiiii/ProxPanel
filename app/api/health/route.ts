@@ -1,50 +1,53 @@
 import { NextResponse } from "next/server"
-import { checkDatabaseConnection } from "@/lib/db"
+import { query } from "@/lib/db"
+import { logger } from "@/lib/logger"
 
 export async function GET() {
   try {
+    const startTime = Date.now()
+
     // Check database connection
-    const dbHealthy = await checkDatabaseConnection()
+    const dbCheck = await query("SELECT 1 as healthy")
+    const dbHealthy = dbCheck.length > 0 && dbCheck[0].healthy === 1
 
-    // Check environment variables
-    const requiredEnvVars = ["JWT_SECRET", "DB_HOST", "DB_USER", "DB_PASSWORD", "DB_NAME"]
+    // Check response time
+    const responseTime = Date.now() - startTime
 
-    const missingEnvVars = requiredEnvVars.filter((varName) => !process.env[varName])
+    // System info
+    const systemInfo = {
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      memory: process.memoryUsage(),
+      version: process.version,
+      platform: process.platform,
+      arch: process.arch,
+    }
 
     const health = {
-      status: "healthy",
-      timestamp: new Date().toISOString(),
-      version: process.env.npm_package_version || "1.0.0",
-      environment: process.env.NODE_ENV || "development",
-      database: dbHealthy ? "connected" : "disconnected",
-      services: {
-        database: dbHealthy,
-        proxmox: !!process.env.PROXMOX_HOST,
-        auth: !!process.env.JWT_SECRET,
+      status: dbHealthy ? "healthy" : "unhealthy",
+      checks: {
+        database: dbHealthy ? "pass" : "fail",
+        responseTime: responseTime < 1000 ? "pass" : "warn",
       },
-      issues: [],
-    }
-
-    if (!dbHealthy) {
-      health.issues.push("Database connection failed")
-      health.status = "unhealthy"
-    }
-
-    if (missingEnvVars.length > 0) {
-      health.issues.push(`Missing environment variables: ${missingEnvVars.join(", ")}`)
-      health.status = "unhealthy"
+      responseTime,
+      system: systemInfo,
     }
 
     const statusCode = health.status === "healthy" ? 200 : 503
 
+    if (statusCode === 503) {
+      logger.error("Health check failed", health)
+    }
+
     return NextResponse.json(health, { status: statusCode })
   } catch (error) {
+    logger.error("Health check error", { error })
+
     return NextResponse.json(
       {
         status: "unhealthy",
-        timestamp: new Date().toISOString(),
         error: "Health check failed",
-        details: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString(),
       },
       { status: 503 },
     )

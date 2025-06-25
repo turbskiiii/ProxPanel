@@ -1,15 +1,65 @@
 {
-  "name": "my-v0-project",
-  "version": "0.1.0",
+  "name": "proxpanel",
+  "version": "1.0.0",
   "private": true,
+  "description": "Professional VPS management dashboard for Proxmox",
+  "keywords": [
+    "vps",
+    "proxmox",
+    "dashboard",
+    "management",
+    "hosting",
+    "virtualization",
+    "nextjs",
+    "typescript",
+    "react"
+  ],
+  "homepage": "https://github.com/your-org/proxpanel#readme",
+  "bugs": {
+    "url": "https://github.com/your-org/proxpanel/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/proxpanel.git"
+  },
+  "license": "MIT",
+  "author": "Your Organization",
   "scripts": {
     "build": "next build",
+    "db:backup": "./scripts/backup.sh",
+    "db:migrate": "node scripts/migrate.js",
+    "db:seed": "node scripts/seed.js",
+    "deploy:prod": "./scripts/production-deploy.sh",
     "dev": "next dev",
+    "docker:build": "docker build -t proxpanel .",
+    "docker:run": "docker run -p 3000:3000 proxpanel",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "lint": "next lint",
-    "start": "next start"
+    "lint:fix": "next lint --fix",
+    "prepare": "husky install",
+    "security:audit": "npm audit",
+    "security:fix": "npm audit fix",
+    "start": "next start",
+    "test": "jest",
+    "test:ci": "jest --ci --coverage --watchAll=false",
+    "test:coverage": "jest --coverage",
+    "test:watch": "jest --watch",
+    "type-check": "tsc --noEmit",
+    "validate-env": "node -e \"require('./lib/env-validation').validateEnv()\""
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ]
   },
   "dependencies": {
-    "@hookform/resolvers": "^3.9.1",
+    "@hookform/resolvers": "^3.3.2",
+    "@jest/globals": "latest",
     "@radix-ui/react-accordion": "latest",
     "@radix-ui/react-alert-dialog": "latest",
     "@radix-ui/react-aspect-ratio": "latest",
@@ -29,6 +79,7 @@
     "@radix-ui/react-scroll-area": "latest",
     "@radix-ui/react-select": "latest",
     "@radix-ui/react-separator": "latest",
+    "@radix-ui/react-sheet": "^1.0.0",
     "@radix-ui/react-slider": "latest",
     "@radix-ui/react-slot": "latest",
     "@radix-ui/react-switch": "latest",
@@ -37,20 +88,22 @@
     "@radix-ui/react-toggle": "latest",
     "@radix-ui/react-toggle-group": "latest",
     "@radix-ui/react-tooltip": "latest",
-    "autoprefixer": "^10.4.20",
     "bcryptjs": "latest",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "latest",
-    "date-fns": "4.1.0",
+    "date-fns": "latest",
     "dotenv": "latest",
     "embla-carousel-react": "latest",
+    "fs": "latest",
     "input-otp": "latest",
     "jsonwebtoken": "latest",
     "lucide-react": "^0.454.0",
     "mysql2": "latest",
     "next": "14.2.16",
     "next-themes": "latest",
+    "node-notifier": "latest",
+    "path": "latest",
     "react": "^18",
     "react-day-picker": "latest",
     "react-dom": "^18",
@@ -61,14 +114,37 @@
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "latest",
-    "zod": "^3.24.1"
+    "zod": "latest"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.1.5",
+    "@testing-library/react": "^14.1.2",
+    "@testing-library/user-event": "^14.5.1",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jest": "^29.5.8",
+    "@types/jsonwebtoken": "^9.0.5",
     "@types/node": "^22",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@typescript-eslint/eslint-plugin": "^6.13.1",
+    "@typescript-eslint/parser": "^6.13.1",
+    "autoprefixer": "^10.4.16",
+    "eslint": "^8.54.0",
+    "eslint-config-next": "14.0.4",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-react": "^7.33.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "husky": "^8.0.3",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "lint-staged": "^15.1.0",
     "postcss": "^8.5",
-    "tailwindcss": "^3.4.17",
+    "prettier": "^3.1.0",
+    "tailwindcss": "^3.3.6",
     "typescript": "^5"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
   }
 }
