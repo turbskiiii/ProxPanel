@@ -1,57 +1,48 @@
 import { type NextRequest, NextResponse } from "next/server"
-import bcrypt from "bcryptjs"
-import jwt from "jsonwebtoken"
-import { query } from "@/lib/db"
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password } = await request.json()
+    const body = await request.json()
+    const { email, password } = body
 
-    if (!email || !password) {
-      return NextResponse.json({ error: "Email and password are required" }, { status: 400 })
-    }
+    // Demo credentials - in production, verify against database
+    const demoCredentials = [
+      { email: "admin@proxpanel.com", password: "demo123", role: "admin" },
+      { email: "demo@proxpanel.com", password: "demo123", role: "user" },
+      { email: "admin@example.com", password: "admin", role: "admin" },
+      { email: "user@example.com", password: "password", role: "user" },
+    ]
 
-    // Get user from database
-    const users = await query("SELECT id, email, password_hash, name FROM users WHERE email = ?", [email])
+    const user = demoCredentials.find((cred) => cred.email === email && cred.password === password)
 
-    if (users.length === 0) {
+    if (!user) {
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 })
     }
 
-    const user = users[0]
-
-    // Verify password
-    const isValidPassword = await bcrypt.compare(password, user.password_hash)
-    if (!isValidPassword) {
-      return NextResponse.json({ error: "Invalid credentials" }, { status: 401 })
-    }
-
-    // Create JWT token
-    const token = jwt.sign(
-      {
-        userId: user.id,
+    // Create a simple token (in production, use proper JWT)
+    const token = Buffer.from(
+      JSON.stringify({
         email: user.email,
-        name: user.name,
-      },
-      process.env.JWT_SECRET!,
-      { expiresIn: "7d" },
-    )
+        role: user.role,
+        timestamp: Date.now(),
+      }),
+    ).toString("base64")
 
-    // Set HTTP-only cookie
     const response = NextResponse.json({
       success: true,
       user: {
-        id: user.id,
         email: user.email,
-        name: user.name,
+        role: user.role,
       },
+      redirectUrl: user.role === "admin" ? "/admin" : "/dashboard",
     })
 
+    // Set HTTP-only cookie
     response.cookies.set("auth-token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60, // 7 days
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 7, // 7 days
     })
 
     return response
