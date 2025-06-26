@@ -146,7 +146,6 @@ DB_PASSWORD=proxpanel
 
 # Proxmox Configuration
 PROXMOX_HOST=https://your-proxmox-ip:8006
-PROXMOX_PORT=8006
 PROXMOX_USERNAME=root@proxmoxpanel.com
 PROXMOX_PASSWORD=test1234
 PROXMOX_REALM=pam
