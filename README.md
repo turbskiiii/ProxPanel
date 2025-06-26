@@ -91,23 +91,25 @@
 4. **Initialize the database**
    \`\`\`bash
    # Create database and tables
-   mysql -u root -p < database/schema.sql
+   mysql -u root -p
+   CREATE DATABASE proxpanel;
+   EXIT;
    
    # Load sample data (optional)
    mysql -u root -p < database/seed.sql
    \`\`\`
 
-5. **Validate environment**
+6. **Validate environment**
    \`\`\`bash
    npm run validate-env
    \`\`\`
 
-6. **Start the development server**
+7. **Start the development server**
    \`\`\`bash
    npm run dev
    \`\`\`
 
-7. **Access the application**
+8. **Access the application**
    - Dashboard: http://localhost:3000
    - Admin Panel: http://localhost:3000/admin
 
@@ -135,20 +137,18 @@ npm run deploy:prod
 ### Required Variables
 \`\`\`bash
 # Database Configuration
+DB_CONNECTION=mysql
 DB_HOST=localhost
 DB_PORT=3306
-DB_USER=your_db_user
-DB_PASSWORD=your_db_password
-DB_NAME=proxpanel
-
-# JWT Secret (minimum 32 characters)
-JWT_SECRET=your_super_secret_jwt_key_here
+DB_DATABASE=panel
+DB_USERNAME=root
+DB_PASSWORD=proxpanel
 
 # Proxmox Configuration
-PROXMOX_HOST=your-proxmox-server.com
+PROXMOX_HOST=https://your-proxmox-ip:8006
 PROXMOX_PORT=8006
-PROXMOX_USERNAME=root
-PROXMOX_PASSWORD=your_proxmox_password
+PROXMOX_USERNAME=root@proxmoxpanel.com
+PROXMOX_PASSWORD=test1234
 PROXMOX_REALM=pam
 \`\`\`
 
