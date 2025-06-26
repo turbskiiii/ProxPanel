@@ -4,8 +4,27 @@
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-14.0-black)](https://nextjs.org/)
+[![GitHub](https://img.shields.io/badge/GitHub-turbskiiii-181717?logo=github)](https://github.com/turbskiiii)
+
+> **🚀 Live Demo:** [https://v0-react-dashboard-design-henna.vercel.app](https://v0-react-dashboard-design-henna.vercel.app)
 
 *A modern, professional web-based dashboard for managing Proxmox VE virtual private servers. Built with Next.js, TypeScript, and Tailwind CSS.*
+
+**Created by [Aaron (turbskiiii)](https://github.com/turbskiiii)** - Full-Stack Developer & IT Systems Specialist
+
+---
+
+## 🎯 **Demo Access**
+
+### 👑 **Admin Panel Access**
+- **Email:** `admin@proxpanel.com`
+- **Password:** `demo123`
+- **Features:** Full admin dashboard, user management, system monitoring
+
+### 👤 **User Dashboard Access**  
+- **Email:** `demo@proxpanel.com`
+- **Password:** `demo123`
+- **Features:** VPS management, monitoring, resource control
 
 ---
 
@@ -38,47 +57,19 @@
 - **Audit Trail** - Complete activity logging for compliance
 - **Security Headers** - OWASP-compliant security headers
 
-### 📊 **Monitoring & Analytics**
-- **Real-time Metrics** - Live performance monitoring
-- **Historical Data** - Trend analysis and capacity planning
-- **Alert System** - Proactive monitoring and notifications
-- **Health Checks** - Automated system health monitoring
-
 ## 📸 Screenshots
 
 <div align="center">
 
-### 🏠 **Dashboard Overview**
-![Dashboard Overview](./public/images/proxpanel-dashboard.png)
-*Real-time VPS monitoring with performance metrics and resource usage*
-
 ### 🔐 **Login Interface**
-![Login Interface](./public/images/proxpanel-login.png)
-*Clean, professional authentication interface*
+![Login Interface](https://v0-react-dashboard-design-henna.vercel.app/login)
+*Professional authentication with demo credentials*
 
-### 🖥️ **VPS Management**
-![VPS Management](./public/images/proxpanel-vps-detail.png)
-*Comprehensive VM control panel with power management and SSH access*
+### 🏠 **User Dashboard**
+*Real-time VPS monitoring with performance metrics*
 
-### 📊 **Performance Monitoring**
-![Performance Monitoring](./public/images/proxpanel-monitoring.png)
-*Advanced analytics with historical data and real-time charts*
-
-### 🌐 **Network Configuration**
-![Network Configuration](./public/images/proxpanel-networking.png)
-*Network management with firewall rules and IP configuration*
-
-### 🔧 **SSH Connection Panel**
-![SSH Connection Panel](./public/images/proxpanel-ssh-panel.png)
-*Easy SSH access with connection details and password management*
-
-### 💿 **OS Reinstallation**
-![OS Reinstallation](./public/images/proxpanel-os-reinstall.png)
-*Safe operating system reinstallation with confirmation dialogs*
-
-### 📱 **Mobile Interface**
-![Mobile Interface](./public/images/proxpanel-mobile.png)
-*Fully responsive design optimized for mobile devices*
+### 👑 **Admin Panel**
+*Comprehensive system administration and user management*
 
 </div>
 
@@ -86,32 +77,21 @@
 
 - **Frontend**: Next.js 14, React 18, TypeScript
 - **Styling**: Tailwind CSS, shadcn/ui components
-- **Backend**: Next.js API routes, MySQL database
+- **Backend**: Next.js API routes with demo data
 - **Authentication**: JWT tokens with HTTP-only cookies
-- **Proxmox Integration**: Native PVE API with token authentication
-- **Deployment**: Docker, Docker Compose, Nginx reverse proxy
-
-## 📋 Prerequisites
-
-- Node.js 18+ and npm
-- MySQL 8.0+
-- Proxmox VE 7.0+ with API access
-- Docker and Docker Compose (for deployment)
+- **Deployment**: Vercel with Edge Runtime
+- **Database**: Demo data (MySQL schema included for production)
 
 ## 🚀 Quick Start
 
-### Prerequisites
+### 🌐 **Try the Live Demo**
+Visit [https://v0-react-dashboard-design-henna.vercel.app](https://v0-react-dashboard-design-henna.vercel.app) and use the demo credentials above.
 
-- **Node.js** 18.0.0 or higher
-- **MySQL** 8.0 or higher
-- **Proxmox VE** 7.0 or higher
-- **Docker** (optional, for containerized deployment)
-
-### Installation
+### 💻 **Local Development**
 
 1. **Clone the repository**
    \`\`\`bash
-   git clone https://github.com/your-org/proxpanel.git
+   git clone https://github.com/turbskiiii/proxpanel.git
    cd proxpanel
    \`\`\`
 
@@ -120,57 +100,41 @@
    npm install
    \`\`\`
 
-3. **Set up environment variables**
-   \`\`\`bash
-   cp env.example .env
-   # Edit .env with your configuration
-   \`\`\`
-
-4. **Initialize the database**
-   \`\`\`bash
-   # Create database and tables
-   mysql -u root -p < database/schema.sql
-   
-   # Load sample data (optional)
-   mysql -u root -p < database/seed.sql
-   \`\`\`
-
-5. **Validate environment**
-   \`\`\`bash
-   npm run validate-env
-   \`\`\`
-
-6. **Start the development server**
+3. **Start development server**
    \`\`\`bash
    npm run dev
    \`\`\`
 
-7. **Access the application**
+4. **Access the application**
    - Dashboard: http://localhost:3000
-   - Admin Panel: http://localhost:3000/admin
+   - Use demo credentials from above
 
-## 🐳 Docker Deployment
+## 🐳 Production Deployment
 
-### Development
+### **Vercel (Recommended)**
 \`\`\`bash
-docker-compose up -d
+# Deploy to Vercel
+vercel --prod
 \`\`\`
 
-### Production
+### **Docker**
 \`\`\`bash
-# Set environment variables
-export DB_USER=your_db_user
-export DB_PASSWORD=your_db_password
-export JWT_SECRET=your_jwt_secret
-# ... other variables
+# Build and run with Docker
+docker build -t proxpanel .
+docker run -p 3000:3000 proxpanel
+\`\`\`
 
-# Deploy
-npm run deploy:prod
+### **Traditional Hosting**
+\`\`\`bash
+# Build for production
+npm run build
+npm start
 \`\`\`
 
 ## 📋 Environment Variables
 
-### Required Variables
+For production deployment with real Proxmox integration:
+
 \`\`\`bash
 # Database Configuration
 DB_HOST=localhost
@@ -190,157 +154,74 @@ PROXMOX_PASSWORD=your_proxmox_password
 PROXMOX_REALM=pam
 \`\`\`
 
-### Optional Variables
-\`\`\`bash
-# Application
-NODE_ENV=production
-APP_URL=https://your-domain.com
-LOG_LEVEL=info
+## 🧪 Demo vs Production
 
-# Email (for notifications)
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your_email@gmail.com
-SMTP_PASSWORD=your_email_password
-\`\`\`
+### 🎭 **Demo Mode (Current)**
+- **Authentication:** Demo credentials only
+- **Data:** Mock VPS and user data
+- **APIs:** Simulated responses
+- **Database:** Not required
+- **Perfect for:** Testing, showcasing, development
 
-## 🧪 Testing
-
-\`\`\`bash
-# Run all tests
-npm test
-
-# Run tests in watch mode
-npm run test:watch
-
-# Run tests with coverage
-npm run test:coverage
-
-# Run tests for CI
-npm run test:ci
-\`\`\`
+### 🏭 **Production Mode**
+- **Authentication:** Real user accounts with database
+- **Data:** Live Proxmox VE integration
+- **APIs:** Real Proxmox API calls
+- **Database:** MySQL with full schema
+- **Perfect for:** Live hosting environments
 
 ## 🔧 Development
 
-### Code Quality
+### **Available Scripts**
 \`\`\`bash
-# Lint code
-npm run lint
-
-# Fix linting issues
-npm run lint:fix
-
-# Type checking
-npm run type-check
-
-# Format code
-npm run format
+npm run dev          # Start development server
+npm run build        # Build for production
+npm run start        # Start production server
+npm run lint         # Run ESLint
+npm run type-check   # TypeScript type checking
+npm test             # Run tests
 \`\`\`
 
-### Database Operations
-\`\`\`bash
-# Run migrations
-npm run db:migrate
-
-# Seed database
-npm run db:seed
-
-# Backup database
-npm run db:backup
-\`\`\`
-
-## 📚 API Documentation
-
-### Authentication Endpoints
-- `POST /api/auth/login` - User login
-- `POST /api/auth/register` - User registration
-- `POST /api/auth/logout` - User logout
-- `GET /api/auth/me` - Get current user
-
-### VPS Management Endpoints
-- `GET /api/vps` - List user VPS instances
-- `POST /api/vps` - Create new VPS
-- `GET /api/vps/[id]` - Get VPS details
-- `PUT /api/vps/[id]` - Update VPS
-- `DELETE /api/vps/[id]` - Delete VPS
-- `POST /api/vps/[id]/power` - Power management
-- `POST /api/vps/[id]/password` - Reset root password
-
-### Admin Endpoints
-- `GET /api/admin/stats` - System statistics
-- `GET /api/admin/users` - User management
-- `GET /api/admin/audit` - Audit logs
-
-## 🏗️ Architecture
-
-### Technology Stack
-- **Frontend**: Next.js 14, React 18, TypeScript
-- **Styling**: Tailwind CSS, shadcn/ui components
-- **Backend**: Next.js API Routes, Node.js
-- **Database**: MySQL 8.0
-- **Authentication**: JWT with HTTP-only cookies
-- **Validation**: Zod schema validation
-- **Testing**: Jest, React Testing Library
-
-### Project Structure
+### **Project Structure**
 \`\`\`
 proxpanel/
 ├── app/                    # Next.js app directory
-│   ├── api/               # API routes
+│   ├── api/               # API routes with demo data
 │   ├── dashboard/         # User dashboard
 │   ├── admin/            # Admin panel
-│   └── (auth)/           # Authentication pages
+│   └── login/            # Authentication
 ├── components/            # React components
 ├── lib/                  # Utility libraries
-├── database/             # Database schema and migrations
-├── scripts/              # Deployment and utility scripts
-├── __tests__/            # Test files
+├── database/             # Database schema (for production)
 └── public/               # Static assets
 \`\`\`
 
-## 🔒 Security
+## 👨‍💻 About the Developer
 
-### Security Features
-- **Input Validation** - All inputs validated with Zod schemas
-- **Rate Limiting** - API endpoint protection
-- **SQL Injection Prevention** - Parameterized queries
-- **XSS Protection** - Content Security Policy headers
-- **CSRF Protection** - SameSite cookie configuration
-- **Secure Headers** - OWASP-compliant security headers
+**Aaron (turbskiiii)** is a passionate Full-Stack Developer and IT Systems Specialist from Ohio, with expertise in:
 
-### Security Best Practices
-- Regular security audits with `npm audit`
-- Environment variable validation
-- Comprehensive logging and monitoring
-- Secure password hashing with bcrypt
-- JWT token expiration and rotation
+- **🖥️ Full-Stack Development** - JavaScript, TypeScript, Python, C++
+- **🔧 IT Systems** - Linux, Docker, Nginx, Server Management
+- **🎨 3D Modeling** - Blender, 3D Model Artist
+- **☁️ Cloud & Virtualization** - Proxmox, VPS Management, Performance Optimization
 
-## 📈 Performance
+*"Whether diving into virtual worlds, solving complex problems, or creating digital art - I bring a unique blend of technical expertise and creative vision to every project."*
 
-### Optimization Features
-- **Server-Side Rendering** - Fast initial page loads
-- **Static Generation** - Optimized static pages
-- **Image Optimization** - Next.js image optimization
-- **Code Splitting** - Automatic code splitting
-- **Caching** - Intelligent caching strategies
-
-### Monitoring
-- Health check endpoints
-- Performance metrics collection
-- Error tracking and logging
-- Resource usage monitoring
+### 🔗 **Connect with Aaron:**
+- **GitHub:** [@turbskiiii](https://github.com/turbskiiii)
+- **Portfolio:** [information.turbskiiii.com](https://information.turbskiiii.com)
+- **Location:** Ohio, United States
 
 ## 🤝 Contributing
 
 We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
 
-### Development Workflow
+### **Development Workflow**
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Add tests for new functionality
-5. Ensure all tests pass
-6. Submit a pull request
+4. Test with demo credentials
+5. Submit a pull request
 
 ## 📄 License
 
@@ -348,9 +229,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🆘 Support
 
-- **Documentation**: [GitHub Wiki](https://github.com/your-org/proxpanel/wiki)
-- **Issues**: [GitHub Issues](https://github.com/your-org/proxpanel/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-org/proxpanel/discussions)
+- **Live Demo:** [Try ProxPanel](https://v0-react-dashboard-design-henna.vercel.app)
+- **Issues:** [GitHub Issues](https://github.com/turbskiiii/proxpanel/issues)
+- **Discussions:** [GitHub Discussions](https://github.com/turbskiiii/proxpanel/discussions)
+- **Developer:** [@turbskiiii](https://github.com/turbskiiii)
 
 ## 🙏 Acknowledgments
 
@@ -361,4 +243,15 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
+<div align="center">
+
 **ProxPanel** - Professional VPS Management Made Simple 🚀
+
+*Created with ❤️ by [Aaron (turbskiiii)](https://github.com/turbskiiii)*
+
+[![GitHub followers](https://img.shields.io/github/followers/turbskiiii?style=social)](https://github.com/turbskiiii)
+[![GitHub stars](https://img.shields.io/github/stars/turbskiiii/proxpanel?style=social)](https://github.com/turbskiiii/proxpanel)
+
+</div>
+
+> **Note:** This is a demo version with mock data. For production use with real Proxmox integration, see the environment variables section above.

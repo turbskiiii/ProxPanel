@@ -1,6 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { verifyAuth } from "@/lib/auth"
 import { query } from "@/lib/db"
+import { VPSService } from "@/lib/vps-service"
+import { logger } from "@/lib/logger"
+
+const vpsService = new VPSService()
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -9,131 +13,20 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const vpsId = params.id
+    const vpsDetails = await vpsService.getVPSDetails(user.userId, params.id)
 
-    // Get VPS details
-    const vpsResult = await query(`SELECT * FROM vps_instances WHERE id = ? AND user_id = ?`, [vpsId, user.userId])
+    return NextResponse.json({
+      success: true,
+      data: vpsDetails,
+    })
+  } catch (error) {
+    logger.error("Failed to fetch VPS details", { error: error.message, vpsId: params.id })
 
-    if (vpsResult.length === 0) {
+    if (error.message === "VPS not found") {
       return NextResponse.json({ error: "VPS not found" }, { status: 404 })
     }
 
-    const vps = vpsResult[0]
-
-    // Get latest metrics
-    const metricsResult = await query(
-      `SELECT * FROM vps_metrics 
-       WHERE vps_id = ? 
-       ORDER BY recorded_at DESC 
-       LIMIT 24`,
-      [vpsId],
-    )
-
-    // Get recent action logs
-    const logsResult = await query(
-      `SELECT * FROM action_logs 
-       WHERE vps_id = ? 
-       ORDER BY created_at DESC 
-       LIMIT 10`,
-      [vpsId],
-    )
-
-    const latestMetric = metricsResult[0] || {}
-
-    const vpsDetails = {
-      id: vps.id,
-      name: vps.name,
-      status: vps.status,
-      ip: vps.ip_address,
-      ipv6: vps.ipv6_address,
-      cpu: {
-        usage: latestMetric.cpu_usage || 0,
-        cores: vps.cpu_cores,
-        model: "Intel Xeon E5-2686 v4",
-        frequency: "2.3 GHz",
-      },
-      memory: {
-        used: latestMetric.memory_used_gb || 0,
-        total: vps.memory_gb,
-        usage: vps.memory_gb > 0 ? (latestMetric.memory_used_gb / vps.memory_gb) * 100 : 0,
-        type: "DDR4 ECC",
-      },
-      disk: {
-        used: latestMetric.disk_used_gb || 0,
-        total: vps.disk_gb,
-        type: "NVMe SSD",
-        iops: 15000,
-        readSpeed: 3200,
-        writeSpeed: 2800,
-      },
-      network: {
-        inbound: latestMetric.network_in_mb || 0,
-        outbound: latestMetric.network_out_mb || 0,
-        bandwidth: 1000,
-        totalIn: 2.8,
-        totalOut: 1.9,
-        packets: { in: 1250000, out: 890000 },
-      },
-      uptime: calculateUptime(vps.created_at, vps.status),
-      uptimeSeconds: calculateUptimeSeconds(vps.created_at, vps.status),
-      os: vps.os,
-      kernel: "5.15.0-91-generic",
-      node: vps.node,
-      vmid: vps.vmid,
-      sshPort: vps.ssh_port,
-      rootPassword: vps.root_password,
-      location: getLocationFromNode(vps.node),
-      datacenter: getDCFromNode(vps.node),
-      plan: determinePlan(vps.cpu_cores, vps.memory_gb),
-      monthlyBandwidth: { used: 2.8, total: 10 },
-      backups: {
-        enabled: true,
-        lastBackup: "2024-01-20 03:00:15 UTC",
-        count: 7,
-        schedule: "Daily at 03:00 UTC",
-        retention: 30,
-      },
-      monitoring: {
-        alerts: 0,
-        lastCheck: new Date().toISOString(),
-        responseTime: 45,
-        availability: 99.97,
-        checks: { http: true, ping: true, ssh: true },
-      },
-      security: {
-        firewall: true,
-        ddosProtection: true,
-        sslCerts: 3,
-        lastSecurityScan: "2024-01-19 12:00:00 UTC",
-        vulnerabilities: 0,
-      },
-      cost: {
-        monthly: 89.99,
-        current: 67.49,
-        bandwidth: 12.5,
-        storage: 25.0,
-        compute: 52.49,
-      },
-      specs: {
-        virtualization: "KVM",
-        bootTime: 23,
-        lastReboot: vps.updated_at,
-        architecture: "x86_64",
-      },
-      performance: {
-        cpuBenchmark: 8750,
-        diskBenchmark: 15000,
-        networkLatency: 0.8,
-        loadAverage: [0.45, 0.52, 0.38],
-      },
-      metrics: metricsResult,
-      logs: logsResult,
-    }
-
-    return NextResponse.json({ vps: vpsDetails })
-  } catch (error) {
-    console.error("VPS detail fetch error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    return NextResponse.json({ error: "Failed to fetch VPS details" }, { status: 500 })
   }
 }
 
@@ -197,39 +90,24 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const vpsId = params.id
+    const success = await vpsService.deleteVPS(user.userId, params.id)
 
-    // Validate VPS ownership
-    const vpsResult = await query("SELECT id, vmid, node FROM vps_instances WHERE id = ? AND user_id = ?", [
-      vpsId,
-      user.userId,
-    ])
+    if (success) {
+      return NextResponse.json({
+        success: true,
+        message: "VPS deleted successfully",
+      })
+    } else {
+      throw new Error("VPS deletion failed")
+    }
+  } catch (error) {
+    logger.error("VPS deletion failed", { error: error.message, vpsId: params.id })
 
-    if (vpsResult.length === 0) {
+    if (error.message === "VPS not found") {
       return NextResponse.json({ error: "VPS not found" }, { status: 404 })
     }
 
-    const vps = vpsResult[0]
-
-    // Delete from Proxmox (implement based on your Proxmox setup)
-    // const proxmox = new ProxmoxAPI(...)
-    // await proxmox.deleteVM(vps.node, vps.vmid)
-
-    // Delete from database
-    await query("DELETE FROM vps_instances WHERE id = ?", [vpsId])
-
-    // Log the deletion
-    await query("INSERT INTO action_logs (user_id, vps_id, action, status) VALUES (?, ?, ?, ?)", [
-      user.userId,
-      vpsId,
-      "delete_vps",
-      "success",
-    ])
-
-    return NextResponse.json({ success: true })
-  } catch (error) {
-    console.error("VPS deletion error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    return NextResponse.json({ error: error.message || "VPS deletion failed" }, { status: 500 })
   }
 }
 

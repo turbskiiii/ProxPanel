@@ -24,41 +24,46 @@ export default function LoginPage() {
     setError("")
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      })
 
-      // Demo credentials validation
-      const validCredentials = [
-        { email: "admin@proxpanel.com", password: "demo123", role: "admin" },
-        { email: "admin@example.com", password: "admin", role: "admin" },
-        { email: "demo@proxpanel.com", password: "demo123", role: "user" },
-        { email: "user@example.com", password: "password", role: "user" },
-      ]
+      const data = await response.json()
 
-      const user = validCredentials.find(
-        (cred) => cred.email.toLowerCase() === email.toLowerCase() && cred.password === password,
-      )
+      if (response.ok && data.success) {
+        // Store user info in localStorage for client-side access
+        localStorage.setItem("user-email", data.user.email)
+        localStorage.setItem("user-role", data.user.role)
 
-      if (user) {
-        // Store auth token/session with user info
-        localStorage.setItem("auth-token", "demo-token")
-        localStorage.setItem("user-role", user.role)
-        localStorage.setItem("user-email", user.email)
-
-        // Redirect based on role
-        if (user.role === "admin") {
-          router.push("/admin")
-        } else {
-          router.push("/dashboard")
-        }
+        // Redirect based on server response
+        router.push(data.redirectUrl)
+        router.refresh() // Force a refresh to update auth state
       } else {
-        setError("Invalid credentials. Please use the demo credentials provided below.")
+        setError(data.error || "Login failed. Please check your credentials.")
       }
     } catch (err) {
-      setError("Login failed. Please try again.")
+      console.error("Login error:", err)
+      setError("Network error. Please try again.")
     } finally {
       setIsLoading(false)
     }
+  }
+
+  // Quick login function for demo credentials
+  const quickLogin = (demoEmail: string, demoPassword: string) => {
+    setEmail(demoEmail)
+    setPassword(demoPassword)
+    // Auto-submit after setting credentials
+    setTimeout(() => {
+      const form = document.querySelector("form") as HTMLFormElement
+      if (form) {
+        form.requestSubmit()
+      }
+    }, 100)
   }
 
   return (
@@ -176,12 +181,24 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Demo Credentials */}
+        {/* Demo Credentials with Quick Login */}
         <div className="mt-6 p-4 bg-blue-900/30 rounded-lg border border-blue-500/30">
           <p className="text-blue-200 text-sm text-center mb-3 font-semibold">🚀 Demo Credentials</p>
           <div className="space-y-3">
             <div className="text-xs text-blue-300 bg-blue-800/30 p-3 rounded border border-blue-500/20">
-              <p className="text-blue-200 font-semibold mb-1">👑 Admin Access</p>
+              <div className="flex justify-between items-start mb-2">
+                <p className="text-blue-200 font-semibold">👑 Admin Access</p>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="h-6 px-2 text-xs bg-blue-600/20 border-blue-400/30 text-blue-200 hover:bg-blue-600/40"
+                  onClick={() => quickLogin("admin@proxpanel.com", "demo123")}
+                  disabled={isLoading}
+                >
+                  Quick Login
+                </Button>
+              </div>
               <p>
                 <strong>Email:</strong> admin@proxpanel.com
               </p>
@@ -190,7 +207,19 @@ export default function LoginPage() {
               </p>
             </div>
             <div className="text-xs text-blue-300 bg-blue-800/30 p-3 rounded border border-blue-500/20">
-              <p className="text-blue-200 font-semibold mb-1">👤 User Access</p>
+              <div className="flex justify-between items-start mb-2">
+                <p className="text-blue-200 font-semibold">👤 User Access</p>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="h-6 px-2 text-xs bg-blue-600/20 border-blue-400/30 text-blue-200 hover:bg-blue-600/40"
+                  onClick={() => quickLogin("demo@proxpanel.com", "demo123")}
+                  disabled={isLoading}
+                >
+                  Quick Login
+                </Button>
+              </div>
               <p>
                 <strong>Email:</strong> demo@proxpanel.com
               </p>
