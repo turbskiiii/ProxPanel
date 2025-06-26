@@ -27,13 +27,32 @@ export default function LoginPage() {
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1500))
 
-      // In a real app, validate credentials with your backend
-      if (email && password) {
-        // Store auth token/session
+      // Demo credentials validation
+      const validCredentials = [
+        { email: "admin@proxpanel.com", password: "demo123", role: "admin" },
+        { email: "admin@example.com", password: "admin", role: "admin" },
+        { email: "demo@proxpanel.com", password: "demo123", role: "user" },
+        { email: "user@example.com", password: "password", role: "user" },
+      ]
+
+      const user = validCredentials.find(
+        (cred) => cred.email.toLowerCase() === email.toLowerCase() && cred.password === password,
+      )
+
+      if (user) {
+        // Store auth token/session with user info
         localStorage.setItem("auth-token", "demo-token")
-        router.push("/dashboard")
+        localStorage.setItem("user-role", user.role)
+        localStorage.setItem("user-email", user.email)
+
+        // Redirect based on role
+        if (user.role === "admin") {
+          router.push("/admin")
+        } else {
+          router.push("/dashboard")
+        }
       } else {
-        setError("Please enter valid credentials")
+        setError("Invalid credentials. Please use the demo credentials provided below.")
       }
     } catch (err) {
       setError("Login failed. Please try again.")
@@ -87,7 +106,7 @@ export default function LoginPage() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="admin@example.com"
+                  placeholder="admin@proxpanel.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="bg-white/10 border-white/20 text-white placeholder:text-blue-200 focus:border-blue-400 focus:ring-blue-400"
@@ -102,7 +121,7 @@ export default function LoginPage() {
                 <Input
                   id="password"
                   type="password"
-                  placeholder="Enter your password"
+                  placeholder="demo123"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="bg-white/10 border-white/20 text-white placeholder:text-blue-200 focus:border-blue-400 focus:ring-blue-400"
@@ -159,14 +178,26 @@ export default function LoginPage() {
 
         {/* Demo Credentials */}
         <div className="mt-6 p-4 bg-blue-900/30 rounded-lg border border-blue-500/30">
-          <p className="text-blue-200 text-sm text-center mb-2 font-semibold">Demo Credentials</p>
-          <div className="text-xs text-blue-300 space-y-1">
-            <p>
-              <strong>Email:</strong> admin@proxpanel.com
-            </p>
-            <p>
-              <strong>Password:</strong> demo123
-            </p>
+          <p className="text-blue-200 text-sm text-center mb-3 font-semibold">🚀 Demo Credentials</p>
+          <div className="space-y-3">
+            <div className="text-xs text-blue-300 bg-blue-800/30 p-3 rounded border border-blue-500/20">
+              <p className="text-blue-200 font-semibold mb-1">👑 Admin Access</p>
+              <p>
+                <strong>Email:</strong> admin@proxpanel.com
+              </p>
+              <p>
+                <strong>Password:</strong> demo123
+              </p>
+            </div>
+            <div className="text-xs text-blue-300 bg-blue-800/30 p-3 rounded border border-blue-500/20">
+              <p className="text-blue-200 font-semibold mb-1">👤 User Access</p>
+              <p>
+                <strong>Email:</strong> demo@proxpanel.com
+              </p>
+              <p>
+                <strong>Password:</strong> demo123
+              </p>
+            </div>
           </div>
         </div>
       </div>
