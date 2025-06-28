@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Card,
@@ -9,200 +9,230 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Server, Users, Activity, Settings, LogOut } from 'lucide-react';
+import useSWR from 'swr';
+
+const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 export default function DashboardPage() {
-  const [userEmail, setUserEmail] = useState('');
-  const [userRole, setUserRole] = useState('');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  
+  // Fetch user info from secure endpoint
+  const { data: user, error: userError } = useSWR('/api/auth/me', fetcher);
+  
+  // Fetch dashboard stats
+  const { data: stats, error: statsError, isLoading: statsLoading } = useSWR('/api/admin/stats', fetcher);
 
   useEffect(() => {
-    // Get user info from localStorage
-    const email = localStorage.getItem('user-email');
-    const role = localStorage.getItem('user-role');
-
-    if (email && role) {
-      setUserEmail(email);
-      setUserRole(role);
-    } else {
-      // Redirect to login if no user info
+    // Check if user is authenticated
+    if (userError) {
+      // Not authenticated, redirect to login
       router.push('/login');
+      return;
     }
-  }, [router]);
+    
+    if (user) {
+      setIsAuthenticated(true);
+    }
+    
+    setIsLoading(false);
+  }, [user, userError, router]);
 
   const handleLogout = async () => {
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
-      localStorage.removeItem('user-email');
-      localStorage.removeItem('user-role');
       router.push('/login');
     } catch (error) {
-      console.error('Logout error:', error);
-      // Force logout even if API fails
-      localStorage.removeItem('user-email');
-      localStorage.removeItem('user-role');
-      router.push('/login');
+      console.error('Logout failed:', error);
     }
   };
 
-  if (!userEmail) {
+  if (isLoading) {
     return (
-      <div className='min-h-screen bg-gray-50 flex items-center justify-center'>
-        <div className='text-center'>
-          <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto'></div>
-          <p className='mt-2 text-gray-600'>Loading...</p>
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p>Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <p>Please log in to access the dashboard.</p>
+          <Button onClick={() => router.push('/login')} className="mt-4">
+            Go to Login
+          </Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className='min-h-screen bg-gray-50'>
+    <div className="space-y-6">
       {/* Header */}
-      <header className='bg-white shadow-sm border-b'>
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-          <div className='flex justify-between items-center h-16'>
-            <div className='flex items-center'>
-              <Server className='h-8 w-8 text-blue-600 mr-3' />
-              <h1 className='text-xl font-semibold text-gray-900'>ProxPanel</h1>
-            </div>
-            <div className='flex items-center space-x-4'>
-              <span className='text-sm text-gray-600'>
-                {userEmail} ({userRole})
-              </span>
-              <Button
-                variant='outline'
-                size='sm'
-                onClick={handleLogout}
-                className='flex items-center'
-              >
-                <LogOut className='h-4 w-4 mr-2' />
-                Logout
-              </Button>
-            </div>
-          </div>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Dashboard</h1>
+          <p className="text-gray-600">
+            Welcome back, {user?.name || user?.email || 'User'}
+          </p>
         </div>
-      </header>
+        <div className="flex items-center space-x-4">
+          <Badge variant="outline">
+            {user?.is_admin ? 'Admin' : 'User'}
+          </Badge>
+          <Button variant="outline" onClick={handleLogout}>
+            <LogOut className="h-4 w-4 mr-2" />
+            Logout
+          </Button>
+        </div>
+      </div>
 
-      {/* Main Content */}
-      <main className='max-w-7xl mx-auto py-6 sm:px-6 lg:px-8'>
-        <div className='px-4 py-6 sm:px-0'>
-          <div className='mb-8'>
-            <h2 className='text-2xl font-bold text-gray-900'>
-              Welcome to ProxPanel
-            </h2>
-            <p className='mt-1 text-sm text-gray-600'>
-              Manage your VPS infrastructure with ease
-            </p>
-          </div>
-
-          {/* Stats Cards */}
-          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8'>
-            <Card>
-              <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                <CardTitle className='text-sm font-medium'>Total VPS</CardTitle>
-                <Server className='h-4 w-4 text-muted-foreground' />
+      {/* Stats Overview */}
+      {statsLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Loading...</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className='text-2xl font-bold'>3</div>
-                <p className='text-xs text-muted-foreground'>
-                  2 running, 1 stopped
-                </p>
+                <div className="text-2xl font-bold">--</div>
+                <p className="text-xs text-muted-foreground">Loading data...</p>
               </CardContent>
             </Card>
-
-            <Card>
-              <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                <CardTitle className='text-sm font-medium'>CPU Usage</CardTitle>
-                <Activity className='h-4 w-4 text-muted-foreground' />
-              </CardHeader>
-              <CardContent>
-                <div className='text-2xl font-bold'>45%</div>
-                <p className='text-xs text-muted-foreground'>
-                  Average across all VPS
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                <CardTitle className='text-sm font-medium'>Memory</CardTitle>
-                <Activity className='h-4 w-4 text-muted-foreground' />
-              </CardHeader>
-              <CardContent>
-                <div className='text-2xl font-bold'>8.2GB</div>
-                <p className='text-xs text-muted-foreground'>
-                  of 16GB allocated
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                <CardTitle className='text-sm font-medium'>Storage</CardTitle>
-                <Activity className='h-4 w-4 text-muted-foreground' />
-              </CardHeader>
-              <CardContent>
-                <div className='text-2xl font-bold'>156GB</div>
-                <p className='text-xs text-muted-foreground'>of 500GB used</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Quick Actions */}
+          ))}
+        </div>
+      ) : statsError ? (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center text-red-600">
+              <p>Failed to load dashboard statistics</p>
+              <p className="text-sm text-gray-500 mt-2">Please check your connection and try again</p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : stats ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-              <CardDescription>
-                Common tasks and management options
-              </CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total VPS</CardTitle>
+              <Server className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-                <Button className='h-20 flex flex-col items-center justify-center'>
-                  <Server className='h-6 w-6 mb-2' />
-                  Create VPS
-                </Button>
-                <Button
-                  variant='outline'
-                  className='h-20 flex flex-col items-center justify-center'
-                >
-                  <Users className='h-6 w-6 mb-2' />
-                  Manage Users
-                </Button>
-                <Button
-                  variant='outline'
-                  className='h-20 flex flex-col items-center justify-center'
-                >
-                  <Settings className='h-6 w-6 mb-2' />
-                  Settings
-                </Button>
-              </div>
+              <div className="text-2xl font-bold">{stats.vps?.total || 0}</div>
+              <p className="text-xs text-muted-foreground">
+                {stats.vps?.running || 0} running, {stats.vps?.stopped || 0} stopped
+              </p>
             </CardContent>
           </Card>
 
-          {/* Admin Panel Link */}
-          {userRole === 'admin' && (
-            <Card className='mt-6 border-blue-200 bg-blue-50'>
-              <CardHeader>
-                <CardTitle className='text-blue-900'>Admin Access</CardTitle>
-                <CardDescription className='text-blue-700'>
-                  You have administrator privileges
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button
-                  onClick={() => router.push('/admin')}
-                  className='bg-blue-600 hover:bg-blue-700'
-                >
-                  Go to Admin Panel
-                </Button>
-              </CardContent>
-            </Card>
-          )}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Active Users</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.users?.active || 0}</div>
+              <p className="text-xs text-muted-foreground">
+                Total registered users
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">System Health</CardTitle>
+              <Activity className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.health?.overall === 'healthy' ? 'Good' : 'Warning'}</div>
+              <p className="text-xs text-muted-foreground">
+                {stats.health?.proxmox === 'connected' ? 'Proxmox Connected' : 'Proxmox Disconnected'}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">CPU Usage</CardTitle>
+              <Activity className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.cpu?.usage || 0}%</div>
+              <p className="text-xs text-muted-foreground">
+                {stats.cpu?.cores || 0} cores available
+              </p>
+            </CardContent>
+          </Card>
         </div>
-      </main>
+      ) : (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center text-gray-600">
+              <p>No statistics available</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Quick Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Server className="h-5 w-5" />
+              VPS Management
+            </CardTitle>
+            <CardDescription>Create and manage your virtual servers</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={() => router.push('/dashboard/vps')} className="w-full">
+              Manage VPS
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Activity className="h-5 w-5" />
+              Monitoring
+            </CardTitle>
+            <CardDescription>View system performance and alerts</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button variant="outline" onClick={() => router.push('/dashboard/vps')} className="w-full">
+              View Metrics
+            </Button>
+          </CardContent>
+        </Card>
+
+        {user?.is_admin && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="h-5 w-5" />
+                Admin Panel
+              </CardTitle>
+              <CardDescription>Administrative tools and settings</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button variant="outline" onClick={() => router.push('/admin')} className="w-full">
+                Admin Panel
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   );
 }

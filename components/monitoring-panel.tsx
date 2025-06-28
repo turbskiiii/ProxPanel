@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -9,8 +9,10 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Activity,
   AlertCircle,
@@ -20,9 +22,12 @@ import {
   MemoryStick,
   HardDrive,
   Network,
-  Zap,
-  Globe,
+  AlertTriangle,
+  RefreshCw,
+  TrendingUp,
+  TrendingDown
 } from 'lucide-react';
+import useSWR from 'swr';
 
 interface VPSDetails {
   monitoring: {
@@ -41,333 +46,303 @@ interface VPSDetails {
 }
 
 interface MonitoringPanelProps {
-  vps: VPSDetails;
+  vpsId?: string;
 }
 
-export function MonitoringPanel({ vps }: MonitoringPanelProps) {
-  const [timeRange, setTimeRange] = useState('24h');
-
-  // Mock historical data
-  const mockMetrics = {
-    cpu: [45, 52, 38, 61, 45, 39, 48, 55, 42, 47, 51, 45],
-    memory: [40, 42, 38, 45, 43, 41, 44, 46, 39, 42, 45, 40],
-    disk: [45, 45, 46, 45, 47, 46, 45, 48, 46, 45, 47, 45],
-    network: [125, 134, 118, 142, 128, 135, 131, 139, 126, 133, 137, 125],
+interface VPSMetrics {
+  cpu?: {
+    usage: number;
+    cores: number;
+    frequency: number;
   };
+  memory?: {
+    usage: number;
+    used: number;
+    total: number;
+  };
+  storage?: {
+    usage: number;
+    used: number;
+    total: number;
+  };
+  network?: {
+    bandwidth: number;
+    upload: number;
+    download: number;
+  };
+  uptime?: {
+    percentage: number;
+  };
+  performance?: {
+    avgResponseTime: number;
+    throughput: number;
+  };
+  status?: {
+    overall: string;
+    services: string;
+    security: string;
+    backup: string;
+  };
+}
 
-  const alerts = [
-    {
-      id: 1,
+interface SystemAlert {
+  type: 'warning' | 'critical';
+  message: string;
+  icon: React.ComponentType<{ className?: string }>;
+}
+
+const fetcher = (url: string) => fetch(url).then(res => res.json());
+
+export default function MonitoringPanel({ vpsId }: MonitoringPanelProps) {
+  const { data: metrics, error, isLoading } = useSWR(
+    vpsId ? `/api/vps/${vpsId}/metrics` : null, 
+    fetcher
+  );
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p>Loading metrics...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center text-red-600">
+          <AlertTriangle className="h-8 w-8 mx-auto mb-4" />
+          <p>Failed to load metrics</p>
+          <p className="text-sm text-gray-500 mt-2">Please check your connection and try again</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!metrics) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center text-gray-600">
+          <Activity className="h-8 w-8 mx-auto mb-4" />
+          <p>No metrics available</p>
+          <p className="text-sm text-gray-500 mt-2">Select a VPS to view its metrics</p>
+        </div>
+      </div>
+    );
+  }
+
+  const alerts: SystemAlert[] = [];
+  
+  // Generate alerts based on real metrics
+  if (metrics.cpu?.usage > 80) {
+    alerts.push({
       type: 'warning',
-      message: 'High CPU usage detected',
-      time: '2 hours ago',
-      resolved: false,
-    },
-    {
-      id: 2,
-      type: 'info',
-      message: 'Backup completed successfully',
-      time: '6 hours ago',
-      resolved: true,
-    },
-    {
-      id: 3,
-      type: 'error',
-      message: 'Network latency spike',
-      time: '1 day ago',
-      resolved: true,
-    },
-  ];
+      message: `High CPU usage: ${metrics.cpu.usage}%`,
+      icon: Cpu
+    });
+  }
+  
+  if (metrics.memory?.usage > 85) {
+    alerts.push({
+      type: 'critical',
+      message: `Critical memory usage: ${metrics.memory.usage}%`,
+      icon: MemoryStick
+    });
+  }
+  
+  if (metrics.storage?.usage > 90) {
+    alerts.push({
+      type: 'critical',
+      message: `Critical storage usage: ${metrics.storage.usage}%`,
+      icon: HardDrive
+    });
+  }
 
   return (
-    <div className='space-y-6'>
-      {/* Monitoring Overview */}
-      <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-4'>
-        <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>Availability</CardTitle>
-            <Activity className='h-4 w-4 text-muted-foreground' />
-          </CardHeader>
-          <CardContent>
-            <div className='text-2xl font-bold text-green-600'>
-              {vps.monitoring.availability}%
-            </div>
-            <p className='text-xs text-muted-foreground'>Last 30 days</p>
-          </CardContent>
-        </Card>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">System Monitoring</h2>
+          <p className="text-gray-600">Real-time performance metrics</p>
+        </div>
+        <div className="flex items-center space-x-2">
+          <Badge variant="outline" className="flex items-center gap-1">
+            <Clock className="h-3 w-3" />
+            Live Data
+          </Badge>
+          <Button variant="outline" size="sm">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
+        </div>
+      </div>
 
-        <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>Response Time</CardTitle>
-            <Clock className='h-4 w-4 text-muted-foreground' />
-          </CardHeader>
-          <CardContent>
-            <div className='text-2xl font-bold'>
-              {vps.monitoring.responseTime}ms
-            </div>
-            <p className='text-xs text-muted-foreground'>Average response</p>
-          </CardContent>
-        </Card>
+      {/* Alerts */}
+      {alerts.length > 0 && (
+        <div className="space-y-2">
+          {alerts.map((alert, index) => {
+            const IconComponent = alert.icon;
+            return (
+              <div
+                key={index}
+                className={`p-4 rounded-lg border ${
+                  alert.type === 'critical' 
+                    ? 'bg-red-50 border-red-200 text-red-800' 
+                    : 'bg-yellow-50 border-yellow-200 text-yellow-800'
+                }`}
+              >
+                <div className="flex items-center space-x-2">
+                  <IconComponent className="h-4 w-4" />
+                  <span className="font-medium">{alert.message}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
+      {/* Metrics Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* CPU Usage */}
         <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>
-              Network Latency
-            </CardTitle>
-            <Globe className='h-4 w-4 text-muted-foreground' />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">CPU Usage</CardTitle>
+            <Cpu className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold'>
-              {vps.performance.networkLatency}ms
-            </div>
-            <p className='text-xs text-muted-foreground'>
-              To nearest datacenter
+            <div className="text-2xl font-bold">{metrics.cpu?.usage || 0}%</div>
+            <Progress value={metrics.cpu?.usage || 0} className="mt-2" />
+            <p className="text-xs text-muted-foreground mt-2">
+              {metrics.cpu?.cores || 0} cores, {metrics.cpu?.frequency || 0}GHz
             </p>
           </CardContent>
         </Card>
 
+        {/* Memory Usage */}
         <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>Active Alerts</CardTitle>
-            <AlertCircle className='h-4 w-4 text-muted-foreground' />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Memory Usage</CardTitle>
+            <MemoryStick className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold'>{vps.monitoring.alerts}</div>
-            <p className='text-xs text-muted-foreground'>Requires attention</p>
+            <div className="text-2xl font-bold">{metrics.memory?.usage || 0}%</div>
+            <Progress value={metrics.memory?.usage || 0} className="mt-2" />
+            <p className="text-xs text-muted-foreground mt-2">
+              {metrics.memory?.used || 0}GB / {metrics.memory?.total || 0}GB
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Storage Usage */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Storage Usage</CardTitle>
+            <HardDrive className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{metrics.storage?.usage || 0}%</div>
+            <Progress value={metrics.storage?.usage || 0} className="mt-2" />
+            <p className="text-xs text-muted-foreground mt-2">
+              {metrics.storage?.used || 0}GB / {metrics.storage?.total || 0}GB
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Network Usage */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Network</CardTitle>
+            <Network className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{metrics.network?.bandwidth || 0}Mbps</div>
+            <div className="flex items-center space-x-2 mt-2">
+              <TrendingUp className="h-3 w-3 text-green-500" />
+              <span className="text-xs text-muted-foreground">
+                {metrics.network?.upload || 0} Mbps ↑
+              </span>
+              <TrendingDown className="h-3 w-3 text-blue-500" />
+              <span className="text-xs text-muted-foreground">
+                {metrics.network?.download || 0} Mbps ↓
+              </span>
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Service Status */}
+      {/* Performance Trends */}
       <Card>
         <CardHeader>
-          <CardTitle className='flex items-center gap-2'>
-            <CheckCircle className='h-5 w-5' />
-            Service Status
+          <CardTitle className="flex items-center gap-2">
+            <Activity className="h-5 w-5" />
+            Performance Trends
           </CardTitle>
-          <CardDescription>
-            Current status of monitored services
-          </CardDescription>
+          <CardDescription>Historical performance data</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className='grid gap-4 md:grid-cols-3'>
-            <div className='flex items-center justify-between p-3 border rounded-lg'>
-              <div className='flex items-center gap-2'>
-                <Globe className='h-4 w-4' />
-                <span>HTTP Service</span>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-600">
+                {metrics.uptime?.percentage || 0}%
               </div>
-              <Badge
-                variant={vps.monitoring.checks.http ? 'default' : 'destructive'}
-              >
-                {vps.monitoring.checks.http ? 'Online' : 'Offline'}
-              </Badge>
+              <p className="text-sm text-muted-foreground">Uptime</p>
             </div>
-
-            <div className='flex items-center justify-between p-3 border rounded-lg'>
-              <div className='flex items-center gap-2'>
-                <Network className='h-4 w-4' />
-                <span>Ping Response</span>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-600">
+                {metrics.performance?.avgResponseTime || 0}ms
               </div>
-              <Badge
-                variant={vps.monitoring.checks.ping ? 'default' : 'destructive'}
-              >
-                {vps.monitoring.checks.ping ? 'Responding' : 'No Response'}
-              </Badge>
+              <p className="text-sm text-muted-foreground">Avg Response Time</p>
             </div>
-
-            <div className='flex items-center justify-between p-3 border rounded-lg'>
-              <div className='flex items-center gap-2'>
-                <Zap className='h-4 w-4' />
-                <span>SSH Access</span>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-purple-600">
+                {metrics.performance?.throughput || 0}
               </div>
-              <Badge
-                variant={vps.monitoring.checks.ssh ? 'default' : 'destructive'}
-              >
-                {vps.monitoring.checks.ssh ? 'Available' : 'Unavailable'}
-              </Badge>
+              <p className="text-sm text-muted-foreground">Requests/sec</p>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Performance Metrics */}
-      <Tabs value={timeRange} onValueChange={setTimeRange} className='w-full'>
-        <div className='flex items-center justify-between'>
-          <h3 className='text-lg font-semibold'>Performance Metrics</h3>
-          <TabsList className='grid w-auto grid-cols-4'>
-            <TabsTrigger value='1h'>1H</TabsTrigger>
-            <TabsTrigger value='24h'>24H</TabsTrigger>
-            <TabsTrigger value='7d'>7D</TabsTrigger>
-            <TabsTrigger value='30d'>30D</TabsTrigger>
-          </TabsList>
-        </div>
-
-        <TabsContent value={timeRange} className='space-y-4'>
-          <div className='grid gap-4 md:grid-cols-2'>
-            <Card>
-              <CardHeader>
-                <CardTitle className='flex items-center gap-2 text-base'>
-                  <Cpu className='h-4 w-4' />
-                  CPU Usage
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className='space-y-2'>
-                  <div className='flex justify-between text-sm'>
-                    <span>Current</span>
-                    <span className='font-medium'>45%</span>
-                  </div>
-                  <Progress value={45} className='h-2' />
-                  <div className='flex justify-between text-xs text-muted-foreground'>
-                    <span>Avg: 47%</span>
-                    <span>Peak: 61%</span>
-                  </div>
-                </div>
-                <div className='mt-4 h-20 bg-muted rounded flex items-end justify-between px-1'>
-                  {mockMetrics.cpu.map((value, index) => (
-                    <div
-                      key={index}
-                      className='bg-blue-500 w-2 rounded-t'
-                      style={{ height: `${(value / 100) * 80}px` }}
-                    />
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className='flex items-center gap-2 text-base'>
-                  <MemoryStick className='h-4 w-4' />
-                  Memory Usage
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className='space-y-2'>
-                  <div className='flex justify-between text-sm'>
-                    <span>Current</span>
-                    <span className='font-medium'>40%</span>
-                  </div>
-                  <Progress value={40} className='h-2' />
-                  <div className='flex justify-between text-xs text-muted-foreground'>
-                    <span>Avg: 42%</span>
-                    <span>Peak: 46%</span>
-                  </div>
-                </div>
-                <div className='mt-4 h-20 bg-muted rounded flex items-end justify-between px-1'>
-                  {mockMetrics.memory.map((value, index) => (
-                    <div
-                      key={index}
-                      className='bg-green-500 w-2 rounded-t'
-                      style={{ height: `${(value / 100) * 80}px` }}
-                    />
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className='flex items-center gap-2 text-base'>
-                  <HardDrive className='h-4 w-4' />
-                  Disk Usage
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className='space-y-2'>
-                  <div className='flex justify-between text-sm'>
-                    <span>Current</span>
-                    <span className='font-medium'>45%</span>
-                  </div>
-                  <Progress value={45} className='h-2' />
-                  <div className='flex justify-between text-xs text-muted-foreground'>
-                    <span>IOPS: 15,000</span>
-                    <span>R/W: 3.2/2.8 GB/s</span>
-                  </div>
-                </div>
-                <div className='mt-4 h-20 bg-muted rounded flex items-end justify-between px-1'>
-                  {mockMetrics.disk.map((value, index) => (
-                    <div
-                      key={index}
-                      className='bg-purple-500 w-2 rounded-t'
-                      style={{ height: `${(value / 100) * 80}px` }}
-                    />
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className='flex items-center gap-2 text-base'>
-                  <Network className='h-4 w-4' />
-                  Network Traffic
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className='space-y-2'>
-                  <div className='flex justify-between text-sm'>
-                    <span>Current</span>
-                    <span className='font-medium'>214.7 Mbps</span>
-                  </div>
-                  <div className='flex justify-between text-xs text-muted-foreground'>
-                    <span>In: 125.5 Mbps</span>
-                    <span>Out: 89.2 Mbps</span>
-                  </div>
-                </div>
-                <div className='mt-4 h-20 bg-muted rounded flex items-end justify-between px-1'>
-                  {mockMetrics.network.map((value, index) => (
-                    <div
-                      key={index}
-                      className='bg-orange-500 w-2 rounded-t'
-                      style={{ height: `${(value / 200) * 80}px` }}
-                    />
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-      </Tabs>
-
-      {/* Alerts & Events */}
+      {/* System Status */}
       <Card>
         <CardHeader>
-          <CardTitle className='flex items-center gap-2'>
-            <AlertCircle className='h-5 w-5' />
-            Recent Alerts & Events
-          </CardTitle>
-          <CardDescription>
-            Latest monitoring alerts and system events
-          </CardDescription>
+          <CardTitle>System Status</CardTitle>
+          <CardDescription>Current system health indicators</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className='space-y-3'>
-            {alerts.map(alert => (
-              <div
-                key={alert.id}
-                className='flex items-center justify-between p-3 border rounded-lg'
-              >
-                <div className='flex items-center gap-3'>
-                  {alert.type === 'error' ? (
-                    <AlertCircle className='h-4 w-4 text-red-500' />
-                  ) : alert.type === 'warning' ? (
-                    <AlertCircle className='h-4 w-4 text-yellow-500' />
-                  ) : (
-                    <CheckCircle className='h-4 w-4 text-blue-500' />
-                  )}
-                  <div>
-                    <p className='font-medium'>{alert.message}</p>
-                    <p className='text-sm text-muted-foreground'>
-                      {alert.time}
-                    </p>
-                  </div>
-                </div>
-                <Badge variant={alert.resolved ? 'secondary' : 'destructive'}>
-                  {alert.resolved ? 'Resolved' : 'Active'}
-                </Badge>
-              </div>
-            ))}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex items-center space-x-2">
+              <div className={`w-3 h-3 rounded-full ${metrics.status?.overall === 'healthy' ? 'bg-green-500' : 'bg-red-500'}`} />
+              <span>Overall Status</span>
+              <Badge variant={metrics.status?.overall === 'healthy' ? 'default' : 'destructive'}>
+                {metrics.status?.overall || 'Unknown'}
+              </Badge>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className={`w-3 h-3 rounded-full ${metrics.status?.services === 'running' ? 'bg-green-500' : 'bg-red-500'}`} />
+              <span>Services</span>
+              <Badge variant={metrics.status?.services === 'running' ? 'default' : 'destructive'}>
+                {metrics.status?.services || 'Unknown'}
+              </Badge>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className={`w-3 h-3 rounded-full ${metrics.status?.security === 'secure' ? 'bg-green-500' : 'bg-yellow-500'}`} />
+              <span>Security</span>
+              <Badge variant={metrics.status?.security === 'secure' ? 'default' : 'destructive'}>
+                {metrics.status?.security || 'Unknown'}
+              </Badge>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className={`w-3 h-3 rounded-full ${metrics.status?.backup === 'current' ? 'bg-green-500' : 'bg-red-500'}`} />
+              <span>Backup Status</span>
+              <Badge variant={metrics.status?.backup === 'current' ? 'default' : 'destructive'}>
+                {metrics.status?.backup || 'Unknown'}
+              </Badge>
+            </div>
           </div>
         </CardContent>
       </Card>

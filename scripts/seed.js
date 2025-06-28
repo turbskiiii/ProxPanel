@@ -15,8 +15,8 @@ async function seedDatabase() {
     console.log("🌱 Seeding database...")
 
     // Create admin user
-    const adminEmail = "admin@devloo.com"
-    const adminPassword = "DevlooAdmin2024!"
+    const adminEmail = "admin@proxpanel.com"
+    const adminPassword = "ProxPanelAdmin2024!"
     const hashedPassword = await bcrypt.hash(adminPassword, 12)
 
     const [existingAdmin] = await connection.execute("SELECT id FROM users WHERE email = ?", [adminEmail])
@@ -25,7 +25,7 @@ async function seedDatabase() {
       await connection.execute("INSERT INTO users (email, password_hash, name) VALUES (?, ?, ?)", [
         adminEmail,
         hashedPassword,
-        "Devloo Admin",
+        "ProxPanel Admin",
       ])
       console.log("✅ Created admin user:", adminEmail)
       console.log("🔑 Admin password:", adminPassword)
@@ -34,7 +34,7 @@ async function seedDatabase() {
     }
 
     // Create demo user
-    const demoEmail = "demo@devloo.com"
+    const demoEmail = "demo@proxpanel.com"
     const demoPassword = "DemoUser2024!"
     const hashedDemoPassword = await bcrypt.hash(demoPassword, 12)
 
@@ -55,7 +55,7 @@ async function seedDatabase() {
           id: "vm-100",
           name: "Production Web Server",
           vmid: 100,
-          node: "devloo-ny-01",
+          node: "proxpanel-ny-01",
           status: "running",
           ip_address: "192.168.1.100",
           ipv6_address: "2001:db8::100",
@@ -64,13 +64,13 @@ async function seedDatabase() {
           disk_gb: 100,
           os: "Ubuntu 22.04 LTS",
           ssh_port: 22,
-          root_password: "DevlooSecure2024!",
+          root_password: "ProxPanelSecure2024!",
         },
         {
           id: "vm-101",
           name: "Database Server",
           vmid: 101,
-          node: "devloo-fra-01",
+          node: "proxpanel-fra-01",
           status: "running",
           ip_address: "192.168.1.101",
           ipv6_address: "2001:db8::101",
@@ -79,13 +79,13 @@ async function seedDatabase() {
           disk_gb: 200,
           os: "CentOS Stream 9",
           ssh_port: 22,
-          root_password: "DevlooSecure2024!",
+          root_password: "ProxPanelSecure2024!",
         },
         {
           id: "vm-102",
           name: "Development Environment",
           vmid: 102,
-          node: "devloo-lon-01",
+          node: "proxpanel-lon-01",
           status: "stopped",
           ip_address: "192.168.1.102",
           cpu_cores: 2,
@@ -93,7 +93,7 @@ async function seedDatabase() {
           disk_gb: 50,
           os: "Debian 12",
           ssh_port: 22,
-          root_password: "DevlooSecure2024!",
+          root_password: "ProxPanelSecure2024!",
         },
       ]
 

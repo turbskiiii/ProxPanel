@@ -1,8 +1,11 @@
 import type React from 'react';
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
+import { NextIntlClientProvider } from 'next-intl';
+import { notFound } from 'next/navigation';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -36,18 +39,30 @@ export const metadata: Metadata = {
       'Modern web-based dashboard for managing Proxmox VE virtual private servers',
     creator: '@proxpanel',
   },
-  viewport: 'width=device-width, initial-scale=1',
-  themeColor: '#2563eb',
   generator: 'v0.dev',
 };
 
-export default function RootLayout({
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: '#2563eb',
+};
+
+export default async function RootLayout({
   children,
+  params: { locale },
 }: {
   children: React.ReactNode;
+  params: { locale: string };
 }) {
+  let messages;
+  try {
+    messages = (await import(`../../messages/${locale}.json`)).default;
+  } catch (error) {
+    notFound();
+  }
   return (
-    <html lang='en' suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <head>
         <link rel='icon' href='/favicon.ico' />
         <link rel='apple-touch-icon' href='/apple-touch-icon.png' />
@@ -64,7 +79,12 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <NextIntlClientProvider locale={locale} messages={messages}>
+            <div className="fixed top-4 right-4 z-50">
+              <LanguageSwitcher />
+            </div>
+            {children}
+          </NextIntlClientProvider>
         </ThemeProvider>
       </body>
     </html>

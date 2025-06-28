@@ -425,12 +425,12 @@ export function NetworkingPanel({ vps }: NetworkingPanelProps) {
 
               <div>
                 <Label htmlFor='hostname'>Hostname</Label>
-                <Input id='hostname' value='web-server.devloo.com' />
+                <Input id='hostname' value='web-server.proxpanel.com' />
               </div>
 
               <div>
                 <Label htmlFor='domain'>Domain</Label>
-                <Input id='domain' value='devloo.com' />
+                <Input id='domain' value='proxpanel.com' />
               </div>
 
               <Button>Update DNS Settings</Button>

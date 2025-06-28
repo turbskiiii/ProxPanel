@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Devloo Hosting Deployment Script
+# ProxPanel Deployment Script
 set -e
 
-echo "🚀 Starting Devloo Hosting deployment..."
+echo "🚀 Starting ProxPanel deployment..."
 
 # Check if required environment variables are set
 required_vars=("DB_HOST" "DB_PASSWORD" "JWT_SECRET" "PROXMOX_HOST" "PROXMOX_PASSWORD")

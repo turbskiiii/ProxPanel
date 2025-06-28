@@ -1,77 +1,146 @@
 version: '3.8'
 
 services:
-  app:
+  # ProxPanel Application
+  proxpanel:
     build:
       context: .
       dockerfile: Dockerfile
-      target: production
+    container_name: proxpanel-app
+    restart: unless-stopped
     ports:
       - "3000:3000"
     environment:
       - NODE_ENV=production
-      - DB_HOST=mysql
-      - DB_PORT=3306
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DB_NAME=${DB_NAME}
+      - DATABASE_URL=mysql://proxpanel:${DB_PASSWORD}@mysql:3306/proxpanel
       - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRES_IN=7d
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - NEXTAUTH_URL=${NEXTAUTH_URL}
+      - APP_URL=${APP_URL}
       - PROXMOX_HOST=${PROXMOX_HOST}
       - PROXMOX_PORT=${PROXMOX_PORT}
       - PROXMOX_USERNAME=${PROXMOX_USERNAME}
       - PROXMOX_PASSWORD=${PROXMOX_PASSWORD}
+      - PROXMOX_REALM=${PROXMOX_REALM}
+      - BCRYPT_ROUNDS=12
+      - RATE_LIMIT_WINDOW=15m
+      - RATE_LIMIT_MAX_REQUESTS=100
+      - MONITORING_ENABLED=true
+      - BACKUP_ENABLED=true
+      - DNS_ENABLED=true
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+      - FROM_EMAIL=${FROM_EMAIL}
       - LOG_LEVEL=info
+      - LOG_FILE=/var/log/proxpanel/app.log
+      - BACKUP_STORAGE_PATH=/var/backups/proxpanel
+      - BACKUP_RETENTION_DAYS=30
+      - MONITORING_INTERVAL=60000
+      - ALERT_EMAIL=${ALERT_EMAIL}
+    volumes:
+      - ./logs:/var/log/proxpanel
+      - ./backups:/var/backups/proxpanel
     depends_on:
-      mysql:
-        condition: service_healthy
-    restart: unless-stopped
+      - mysql
+    networks:
+      - proxpanel-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
-    volumes:
-      - ./logs:/app/logs
 
+  # MySQL Database
   mysql:
     image: mysql:8.0
+    container_name: proxpanel-mysql
+    restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${DB_NAME}
-      MYSQL_USER: ${DB_USER}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=proxpanel
+      - MYSQL_USER=proxpanel
+      - MYSQL_PASSWORD=${DB_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
-      - ./database/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
-    ports:
-      - "3306:3306"
-    restart: unless-stopped
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - proxpanel-network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 30s
       timeout: 10s
-      retries: 5
+      retries: 3
       start_period: 30s
 
-  nginx:
-    image: nginx:alpine
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx.prod.conf:/etc/nginx/nginx.conf:ro
-      - ./ssl:/etc/nginx/ssl:ro
-    depends_on:
-      - app
+  # Redis Cache (Optional)
+  redis:
+    image: redis:7-alpine
+    container_name: proxpanel-redis
     restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    networks:
+      - proxpanel-network
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      test: ["CMD", "redis-cli", "ping"]
       interval: 30s
       timeout: 10s
       retries: 3
 
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: proxpanel-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+      - ./nginx/logs:/var/log/nginx
+    depends_on:
+      - proxpanel
+    networks:
+      - proxpanel-network
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Backup Service
+  backup:
+    image: alpine:latest
+    container_name: proxpanel-backup
+    restart: "no"
+    volumes:
+      - mysql_data:/var/lib/mysql:ro
+      - ./backups:/backups
+    environment:
+      - DB_PASSWORD=${DB_PASSWORD}
+    command: |
+      sh -c "
+        apk add --no-cache mysql-client &&
+        mysqldump -h mysql -u proxpanel -p$$DB_PASSWORD proxpanel > /backups/backup_$$(date +%Y%m%d_%H%M%S).sql &&
+        gzip /backups/backup_*.sql &&
+        find /backups -name '*.sql.gz' -mtime +30 -delete
+      "
+    depends_on:
+      - mysql
+    networks:
+      - proxpanel-network
+
 volumes:
   mysql_data:
     driver: local
+  redis_data:
+    driver: local
+
+networks:
+  proxpanel-network:
+    driver: bridge

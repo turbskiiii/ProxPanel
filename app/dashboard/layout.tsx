@@ -17,8 +17,10 @@ export default function DashboardLayout({
   const router = useRouter();
 
   useEffect(() => {
+    // Only check for real auth-token
     const token = localStorage.getItem('auth-token');
     if (!token) {
+      setIsAuthenticated(false);
       router.push('/login');
     } else {
       setIsAuthenticated(true);
@@ -26,7 +28,14 @@ export default function DashboardLayout({
   }, [router]);
 
   if (!isAuthenticated) {
-    return <div>Loading...</div>;
+    return (
+      <div className='min-h-screen bg-gray-50 flex items-center justify-center'>
+        <div className='text-center'>
+          <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto'></div>
+          <p className='mt-2 text-gray-600'>Loading...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -36,7 +45,7 @@ export default function DashboardLayout({
         <header className='flex h-16 shrink-0 items-center gap-2 border-b px-4'>
           <SidebarTrigger className='-ml-1' />
           <div className='flex items-center gap-2'>
-            <h1 className='text-lg font-semibold'>Devloo Hosting</h1>
+            <h1 className='text-lg font-semibold'>ProxPanel</h1>
           </div>
         </header>
         <main className='flex-1 p-4'>{children}</main>

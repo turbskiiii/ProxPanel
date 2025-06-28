@@ -52,6 +52,21 @@ function verifyAuthToken(request: NextRequest): boolean {
   }
 }
 
+const PUBLIC_FILE = /\.(.*)$/;
+const locales = ['en', 'es', 'fr', 'de', 'zh', 'ja', 'ko', 'ar', 'ru', 'pt'];
+const defaultLocale = 'en';
+
+function getLocale(request: NextRequest): string {
+  const acceptLang = request.headers.get('accept-language');
+  if (!acceptLang) return defaultLocale;
+  const preferred = acceptLang.split(',').map(l => l.split(';')[0].trim());
+  for (const lang of preferred) {
+    const base = lang.split('-')[0];
+    if (locales.includes(base)) return base;
+  }
+  return defaultLocale;
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const ip = getClientIP(request)
@@ -108,7 +123,17 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  return response
+  // Check if the path already includes a locale
+  const pathLocale = pathname.split('/')[1];
+  if (locales.includes(pathLocale)) {
+    return response;
+  }
+
+  // Redirect to the user's preferred locale
+  const locale = getLocale(request);
+  const url = request.nextUrl.clone();
+  url.pathname = `/${locale}${pathname}`;
+  return NextResponse.redirect(url);
 }
 
 export const config = {

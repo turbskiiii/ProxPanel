@@ -66,7 +66,7 @@ export function AppSidebar() {
       <SidebarHeader>
         <div className='flex items-center gap-2 px-2 py-2'>
           <Server className='h-6 w-6 text-blue-500' />
-          <span className='font-semibold'>Devloo Hosting</span>
+          <span className='font-semibold'>ProxPanel</span>
         </div>
       </SidebarHeader>
 

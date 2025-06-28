@@ -43,7 +43,9 @@
     "pre-commit": "lint-staged",
     "check:all": "npm run lint && npm run type-check && npm run test",
     "clean": "rimraf .next out dist coverage",
-    "clean:all": "npm run clean && rimraf node_modules package-lock.json"
+    "clean:all": "npm run clean && rimraf node_modules package-lock.json",
+    "setup-proxmox": "node scripts/setup-proxmox.js",
+    "test-proxmox": "node scripts/test-proxmox.js"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
@@ -96,7 +98,8 @@
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.454.0",
     "mysql2": "^3.6.5",
-    "next": "14.2.16",
+    "next": "^14.2.30",
+    "next-intl": "^4.3.1",
     "next-themes": "^0.2.1",
     "nodemailer": "^6.9.7",
     "novnc": "^1.2.0",
@@ -107,6 +110,7 @@
     "react-resizable-panels": "^1.0.9",
     "recharts": "^2.8.0",
     "sonner": "^1.2.4",
+    "swr": "^2.3.3",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.8.0",

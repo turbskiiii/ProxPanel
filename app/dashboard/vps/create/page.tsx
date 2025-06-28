@@ -29,7 +29,12 @@ import {
   AlertTriangle,
   Loader2,
   DollarSign,
+  Plus,
+  RefreshCw,
 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
+import useSWR from 'swr';
 
 interface VPSTemplate {
   id: string;
@@ -50,140 +55,32 @@ interface NodeInfo {
   cpu: { usage: number; total: number };
   memory: { usage: number; total: number };
   storage: { usage: number; total: number };
-  status: 'online' | 'offline' | 'maintenance';
+  status: string;
 }
 
-const templates: VPSTemplate[] = [
-  {
-    id: 'ubuntu-22.04',
-    name: 'Ubuntu Server',
-    os: 'Ubuntu',
-    version: '22.04 LTS',
-    description: 'Most popular Linux distribution for servers',
-    minCpu: 1,
-    minMemory: 512,
-    minDisk: 10,
-    recommended: true,
-  },
-  {
-    id: 'debian-12',
-    name: 'Debian',
-    os: 'Debian',
-    version: '12 (Bookworm)',
-    description: 'Stable and secure Linux distribution',
-    minCpu: 1,
-    minMemory: 512,
-    minDisk: 10,
-    recommended: true,
-  },
-  {
-    id: 'centos-9',
-    name: 'CentOS Stream',
-    os: 'CentOS',
-    version: '9',
-    description: 'Enterprise-grade Linux distribution',
-    minCpu: 1,
-    minMemory: 1024,
-    minDisk: 15,
-    recommended: false,
-  },
-  {
-    id: 'rocky-9',
-    name: 'Rocky Linux',
-    os: 'Rocky Linux',
-    version: '9',
-    description: 'RHEL-compatible enterprise Linux',
-    minCpu: 1,
-    minMemory: 1024,
-    minDisk: 15,
-    recommended: false,
-  },
-  {
-    id: 'alpine-3.19',
-    name: 'Alpine Linux',
-    os: 'Alpine',
-    version: '3.19',
-    description: 'Lightweight, security-oriented Linux',
-    minCpu: 1,
-    minMemory: 256,
-    minDisk: 5,
-    recommended: false,
-  },
-];
-
-const mockNodes: NodeInfo[] = [
-  {
-    id: 'pve-ny-01',
-    name: 'New York Node 1',
-    location: 'New York, USA',
-    cpu: { usage: 35, total: 100 },
-    memory: { usage: 45, total: 100 },
-    storage: { usage: 60, total: 100 },
-    status: 'online',
-  },
-  {
-    id: 'pve-la-01',
-    name: 'Los Angeles Node 1',
-    location: 'Los Angeles, USA',
-    cpu: { usage: 28, total: 100 },
-    memory: { usage: 38, total: 100 },
-    storage: { usage: 55, total: 100 },
-    status: 'online',
-  },
-  {
-    id: 'pve-eu-01',
-    name: 'Frankfurt Node 1',
-    location: 'Frankfurt, Germany',
-    cpu: { usage: 42, total: 100 },
-    memory: { usage: 52, total: 100 },
-    storage: { usage: 48, total: 100 },
-    status: 'online',
-  },
-];
+const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 export default function CreateVPSPage() {
   const router = useRouter();
-  const [step, setStep] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
-  const [createdVPS, setCreatedVPS] = useState<any>(null);
-
+  const [isCreating, setIsCreating] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
+    node: '',
     template: '',
     cpu: 1,
-    memory: 1024,
-    disk: 20,
-    node: '',
-    description: '',
+    memory: 1,
+    disk: 10,
+    network: 100,
+    description: ''
   });
 
-  const selectedTemplate = templates.find(t => t.id === formData.template);
-  const selectedNode = mockNodes.find(n => n.id === formData.node);
+  // Fetch real nodes and templates from API
+  const { data: nodes, error: nodesError, isLoading: nodesLoading } = useSWR('/api/vps/nodes', fetcher);
+  const { data: templates, error: templatesError, isLoading: templatesLoading } = useSWR('/api/vps/templates', fetcher);
 
-  const calculateCost = () => {
-    const cpuCost = formData.cpu * 5; // $5 per CPU core
-    const memoryCost = (formData.memory / 1024) * 8; // $8 per GB RAM
-    const diskCost = formData.disk * 0.5; // $0.50 per GB disk
-    return cpuCost + memoryCost + diskCost;
-  };
-
-  const handleNext = () => {
-    if (step < 4) {
-      setStep(step + 1);
-    }
-  };
-
-  const handleBack = () => {
-    if (step > 1) {
-      setStep(step - 1);
-    }
-  };
-
-  const handleCreate = async () => {
-    setLoading(true);
-    setError('');
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsCreating(true);
 
     try {
       const response = await fetch('/api/vps', {
@@ -194,647 +91,311 @@ export default function CreateVPSPage() {
         body: JSON.stringify(formData),
       });
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to create VPS');
+      if (response.ok) {
+        const result = await response.json();
+        router.push(`/dashboard/vps/${result.id}`);
+      } else {
+        const error = await response.json();
+        alert(`Failed to create VPS: ${error.message}`);
       }
-
-      setCreatedVPS(result.data);
-      setSuccess(true);
-      setStep(5);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (error) {
+      console.error('Error creating VPS:', error);
+      alert('Failed to create VPS. Please try again.');
     } finally {
-      setLoading(false);
+      setIsCreating(false);
     }
   };
 
-  const canProceed = () => {
-    switch (step) {
-      case 1:
-        return formData.name && formData.template;
-      case 2:
-        return (
-          formData.cpu >= 1 && formData.memory >= 512 && formData.disk >= 10
-        );
-      case 3:
-        return formData.node;
-      case 4:
-        return true;
-      default:
-        return false;
-    }
+  const handleInputChange = (field: string, value: string | number) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const getStepTitle = () => {
-    switch (step) {
-      case 1:
-        return 'Choose Template';
-      case 2:
-        return 'Configure Resources';
-      case 3:
-        return 'Select Location';
-      case 4:
-        return 'Review & Create';
-      case 5:
-        return 'VPS Created!';
-      default:
-        return 'Create VPS';
-    }
-  };
-
-  if (success) {
+  if (nodesLoading || templatesLoading) {
     return (
-      <div className='space-y-6'>
-        <div className='flex items-center gap-4'>
-          <Button
-            variant='ghost'
-            size='sm'
-            onClick={() => router.push('/dashboard/vps')}
-          >
-            <ArrowLeft className='mr-2 h-4 w-4' />
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p>Loading VPS creation options...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (nodesError || templatesError) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center text-red-600">
+          <AlertTriangle className="h-8 w-8 mx-auto mb-4" />
+          <p>Failed to load VPS creation options</p>
+          <p className="text-sm text-gray-500 mt-2">Please check your connection and try again</p>
+          <Button onClick={() => router.push('/dashboard/vps')} className="mt-4">
+            <ArrowLeft className="h-4 w-4 mr-2" />
             Back to VPS List
           </Button>
         </div>
+      </div>
+    );
+  }
 
-        <Card className='max-w-2xl mx-auto'>
-          <CardHeader className='text-center'>
-            <div className='mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4'>
-              <CheckCircle className='h-8 w-8 text-green-600' />
-            </div>
-            <CardTitle className='text-2xl'>
-              VPS Created Successfully!
-            </CardTitle>
-            <CardDescription>
-              Your virtual private server is being set up
-            </CardDescription>
-          </CardHeader>
-          <CardContent className='space-y-6'>
-            <div className='bg-gray-50 p-4 rounded-lg space-y-3'>
-              <div className='flex justify-between'>
-                <span className='font-medium'>VPS Name:</span>
-                <span>{createdVPS?.name}</span>
-              </div>
-              <div className='flex justify-between'>
-                <span className='font-medium'>VM ID:</span>
-                <span>{createdVPS?.vmid}</span>
-              </div>
-              <div className='flex justify-between'>
-                <span className='font-medium'>Node:</span>
-                <span>{createdVPS?.node}</span>
-              </div>
-              <div className='flex justify-between'>
-                <span className='font-medium'>Status:</span>
-                <Badge variant='outline'>{createdVPS?.status}</Badge>
-              </div>
-              {createdVPS?.rootPassword && (
-                <div className='flex justify-between'>
-                  <span className='font-medium'>Root Password:</span>
-                  <code className='bg-gray-200 px-2 py-1 rounded text-sm'>
-                    {createdVPS.rootPassword}
-                  </code>
-                </div>
-              )}
-            </div>
-
-            <Alert>
-              <AlertTriangle className='h-4 w-4' />
-              <AlertDescription>
-                Your VPS is being created in the background. This process may
-                take 2-5 minutes. You can monitor the progress from the VPS
-                management page.
-              </AlertDescription>
-            </Alert>
-
-            <div className='flex gap-3'>
-              <Button
-                onClick={() => router.push(`/dashboard/vps/${createdVPS?.id}`)}
-                className='flex-1'
-              >
-                <Server className='mr-2 h-4 w-4' />
-                Manage VPS
-              </Button>
-              <Button
-                variant='outline'
-                onClick={() => router.push('/dashboard/vps')}
-                className='flex-1'
-              >
-                View All VPS
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+  if (!nodes || !templates) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center text-gray-600">
+          <Server className="h-8 w-8 mx-auto mb-4" />
+          <p>No nodes or templates available</p>
+          <p className="text-sm text-gray-500 mt-2">Please configure your Proxmox nodes and templates</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className='space-y-6'>
-      <div className='flex items-center gap-4'>
-        <Button
-          variant='ghost'
-          size='sm'
-          onClick={() => router.push('/dashboard/vps')}
-        >
-          <ArrowLeft className='mr-2 h-4 w-4' />
-          Back to VPS List
-        </Button>
-        <div>
-          <h1 className='text-3xl font-bold'>Create New VPS</h1>
-          <p className='text-muted-foreground'>
-            Set up your virtual private server in minutes
-          </p>
-        </div>
-      </div>
-
-      {/* Progress Bar */}
-      <Card>
-        <CardContent className='pt-6'>
-          <div className='flex items-center justify-between mb-4'>
-            <span className='text-sm font-medium'>Step {step} of 4</span>
-            <span className='text-sm text-muted-foreground'>
-              {getStepTitle()}
-            </span>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <Button variant="outline" onClick={() => router.push('/dashboard/vps')}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold">Create New VPS</h1>
+            <p className="text-gray-600">Deploy a new virtual server</p>
           </div>
-          <Progress value={(step / 4) * 100} className='h-2' />
-        </CardContent>
-      </Card>
-
-      {error && (
-        <Alert variant='destructive'>
-          <AlertTriangle className='h-4 w-4' />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-
-      {/* Step 1: Choose Template */}
-      {step === 1 && (
-        <div className='space-y-6'>
-          <Card>
-            <CardHeader>
-              <CardTitle className='flex items-center gap-2'>
-                <Server className='h-5 w-5' />
-                VPS Details
-              </CardTitle>
-              <CardDescription>
-                Choose a name and operating system for your VPS
-              </CardDescription>
-            </CardHeader>
-            <CardContent className='space-y-4'>
-              <div className='space-y-2'>
-                <Label htmlFor='name'>VPS Name</Label>
-                <Input
-                  id='name'
-                  placeholder='e.g., web-server-01'
-                  value={formData.name}
-                  onChange={e =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                />
-                <p className='text-xs text-muted-foreground'>
-                  Use letters, numbers, hyphens, and underscores only
-                </p>
-              </div>
-
-              <div className='space-y-2'>
-                <Label>Operating System Template</Label>
-                <div className='grid gap-3 md:grid-cols-2'>
-                  {templates.map(template => (
-                    <div
-                      key={template.id}
-                      className={`border rounded-lg p-4 cursor-pointer transition-colors ${
-                        formData.template === template.id
-                          ? 'border-primary bg-primary/5'
-                          : 'border-border hover:border-primary/50'
-                      }`}
-                      onClick={() =>
-                        setFormData({ ...formData, template: template.id })
-                      }
-                    >
-                      <div className='flex items-start justify-between'>
-                        <div>
-                          <div className='flex items-center gap-2'>
-                            <h4 className='font-medium'>{template.name}</h4>
-                            {template.recommended && (
-                              <Badge variant='secondary'>Recommended</Badge>
-                            )}
-                          </div>
-                          <p className='text-sm text-muted-foreground'>
-                            {template.version}
-                          </p>
-                          <p className='text-xs text-muted-foreground mt-1'>
-                            {template.description}
-                          </p>
-                        </div>
-                      </div>
-                      <div className='flex gap-4 mt-3 text-xs text-muted-foreground'>
-                        <span>Min CPU: {template.minCpu}</span>
-                        <span>Min RAM: {template.minMemory}MB</span>
-                        <span>Min Disk: {template.minDisk}GB</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Step 2: Configure Resources */}
-      {step === 2 && (
-        <div className='space-y-6'>
-          <Card>
-            <CardHeader>
-              <CardTitle className='flex items-center gap-2'>
-                <Cpu className='h-5 w-5' />
-                Resource Configuration
-              </CardTitle>
-              <CardDescription>
-                Allocate CPU, memory, and storage for your VPS
-              </CardDescription>
-            </CardHeader>
-            <CardContent className='space-y-6'>
-              {/* CPU Configuration */}
-              <div className='space-y-3'>
-                <Label className='flex items-center gap-2'>
-                  <Cpu className='h-4 w-4' />
-                  CPU Cores: {formData.cpu}
-                </Label>
-                <div className='flex items-center gap-4'>
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    onClick={() =>
-                      setFormData({
-                        ...formData,
-                        cpu: Math.max(1, formData.cpu - 1),
-                      })
-                    }
-                    disabled={formData.cpu <= 1}
-                  >
-                    -
-                  </Button>
-                  <span className='w-16 text-center font-mono'>
-                    {formData.cpu} cores
-                  </span>
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    onClick={() =>
-                      setFormData({
-                        ...formData,
-                        cpu: Math.min(16, formData.cpu + 1),
-                      })
-                    }
-                    disabled={formData.cpu >= 16}
-                  >
-                    +
-                  </Button>
-                </div>
-                <p className='text-xs text-muted-foreground'>
-                  Minimum: {selectedTemplate?.minCpu || 1} core(s) • Maximum: 16
-                  cores
-                </p>
-              </div>
-
-              <Separator />
-
-              {/* Memory Configuration */}
-              <div className='space-y-3'>
-                <Label className='flex items-center gap-2'>
-                  <MemoryStick className='h-4 w-4' />
-                  Memory: {formData.memory}MB (
-                  {(formData.memory / 1024).toFixed(1)}GB)
-                </Label>
-                <div className='flex items-center gap-4'>
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    onClick={() =>
-                      setFormData({
-                        ...formData,
-                        memory: Math.max(512, formData.memory - 512),
-                      })
-                    }
-                    disabled={formData.memory <= 512}
-                  >
-                    -512MB
-                  </Button>
-                  <span className='w-24 text-center font-mono'>
-                    {formData.memory}MB
-                  </span>
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    onClick={() =>
-                      setFormData({
-                        ...formData,
-                        memory: Math.min(32768, formData.memory + 512),
-                      })
-                    }
-                    disabled={formData.memory >= 32768}
-                  >
-                    +512MB
-                  </Button>
-                </div>
-                <p className='text-xs text-muted-foreground'>
-                  Minimum: {selectedTemplate?.minMemory || 512}MB • Maximum:
-                  32GB
-                </p>
-              </div>
-
-              <Separator />
-
-              {/* Disk Configuration */}
-              <div className='space-y-3'>
-                <Label className='flex items-center gap-2'>
-                  <HardDrive className='h-4 w-4' />
-                  Storage: {formData.disk}GB
-                </Label>
-                <div className='flex items-center gap-4'>
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    onClick={() =>
-                      setFormData({
-                        ...formData,
-                        disk: Math.max(10, formData.disk - 10),
-                      })
-                    }
-                    disabled={formData.disk <= 10}
-                  >
-                    -10GB
-                  </Button>
-                  <span className='w-16 text-center font-mono'>
-                    {formData.disk}GB
-                  </span>
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    onClick={() =>
-                      setFormData({
-                        ...formData,
-                        disk: Math.min(1000, formData.disk + 10),
-                      })
-                    }
-                    disabled={formData.disk >= 1000}
-                  >
-                    +10GB
-                  </Button>
-                </div>
-                <p className='text-xs text-muted-foreground'>
-                  Minimum: {selectedTemplate?.minDisk || 10}GB • Maximum: 1000GB
-                </p>
-              </div>
-
-              {/* Cost Estimate */}
-              <div className='bg-blue-50 p-4 rounded-lg'>
-                <div className='flex items-center gap-2 mb-2'>
-                  <DollarSign className='h-4 w-4 text-blue-600' />
-                  <span className='font-medium text-blue-900'>
-                    Estimated Monthly Cost
-                  </span>
-                </div>
-                <div className='text-2xl font-bold text-blue-900'>
-                  ${calculateCost().toFixed(2)}/month
-                </div>
-                <div className='text-sm text-blue-700 mt-1'>
-                  CPU: ${(formData.cpu * 5).toFixed(2)} • RAM: $
-                  {((formData.memory / 1024) * 8).toFixed(2)} • Storage: $
-                  {(formData.disk * 0.5).toFixed(2)}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Step 3: Select Location */}
-      {step === 3 && (
-        <div className='space-y-6'>
-          <Card>
-            <CardHeader>
-              <CardTitle className='flex items-center gap-2'>
-                <Network className='h-5 w-5' />
-                Select Location
-              </CardTitle>
-              <CardDescription>
-                Choose the datacenter location for your VPS
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
-                {mockNodes.map(node => (
-                  <div
-                    key={node.id}
-                    className={`border rounded-lg p-4 cursor-pointer transition-colors ${
-                      formData.node === node.id
-                        ? 'border-primary bg-primary/5'
-                        : 'border-border hover:border-primary/50'
-                    } ${node.status !== 'online' ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    onClick={() =>
-                      node.status === 'online' &&
-                      setFormData({ ...formData, node: node.id })
-                    }
-                  >
-                    <div className='flex items-start justify-between mb-3'>
-                      <div>
-                        <h4 className='font-medium'>{node.name}</h4>
-                        <p className='text-sm text-muted-foreground'>
-                          {node.location}
-                        </p>
-                      </div>
-                      <Badge
-                        variant={
-                          node.status === 'online' ? 'default' : 'destructive'
-                        }
-                      >
-                        {node.status}
-                      </Badge>
-                    </div>
-
-                    <div className='space-y-2'>
-                      <div className='flex justify-between text-xs'>
-                        <span>CPU Usage</span>
-                        <span>{node.cpu.usage}%</span>
-                      </div>
-                      <Progress value={node.cpu.usage} className='h-1' />
-
-                      <div className='flex justify-between text-xs'>
-                        <span>Memory Usage</span>
-                        <span>{node.memory.usage}%</span>
-                      </div>
-                      <Progress value={node.memory.usage} className='h-1' />
-
-                      <div className='flex justify-between text-xs'>
-                        <span>Storage Usage</span>
-                        <span>{node.storage.usage}%</span>
-                      </div>
-                      <Progress value={node.storage.usage} className='h-1' />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Step 4: Review & Create */}
-      {step === 4 && (
-        <div className='space-y-6'>
-          <Card>
-            <CardHeader>
-              <CardTitle className='flex items-center gap-2'>
-                <CheckCircle className='h-5 w-5' />
-                Review Configuration
-              </CardTitle>
-              <CardDescription>
-                Review your VPS configuration before creation
-              </CardDescription>
-            </CardHeader>
-            <CardContent className='space-y-6'>
-              <div className='grid gap-6 md:grid-cols-2'>
-                <div className='space-y-4'>
-                  <div>
-                    <h4 className='font-medium mb-2'>VPS Details</h4>
-                    <div className='space-y-2 text-sm'>
-                      <div className='flex justify-between'>
-                        <span className='text-muted-foreground'>Name:</span>
-                        <span className='font-medium'>{formData.name}</span>
-                      </div>
-                      <div className='flex justify-between'>
-                        <span className='text-muted-foreground'>Template:</span>
-                        <span className='font-medium'>
-                          {selectedTemplate?.name}
-                        </span>
-                      </div>
-                      <div className='flex justify-between'>
-                        <span className='text-muted-foreground'>
-                          OS Version:
-                        </span>
-                        <span className='font-medium'>
-                          {selectedTemplate?.version}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <h4 className='font-medium mb-2'>Resources</h4>
-                    <div className='space-y-2 text-sm'>
-                      <div className='flex justify-between'>
-                        <span className='text-muted-foreground'>
-                          CPU Cores:
-                        </span>
-                        <span className='font-medium'>{formData.cpu}</span>
-                      </div>
-                      <div className='flex justify-between'>
-                        <span className='text-muted-foreground'>Memory:</span>
-                        <span className='font-medium'>{formData.memory}MB</span>
-                      </div>
-                      <div className='flex justify-between'>
-                        <span className='text-muted-foreground'>Storage:</span>
-                        <span className='font-medium'>{formData.disk}GB</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className='space-y-4'>
-                  <div>
-                    <h4 className='font-medium mb-2'>Location</h4>
-                    <div className='space-y-2 text-sm'>
-                      <div className='flex justify-between'>
-                        <span className='text-muted-foreground'>Node:</span>
-                        <span className='font-medium'>
-                          {selectedNode?.name}
-                        </span>
-                      </div>
-                      <div className='flex justify-between'>
-                        <span className='text-muted-foreground'>Location:</span>
-                        <span className='font-medium'>
-                          {selectedNode?.location}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <h4 className='font-medium mb-2'>Billing</h4>
-                    <div className='space-y-2 text-sm'>
-                      <div className='flex justify-between'>
-                        <span className='text-muted-foreground'>
-                          Monthly Cost:
-                        </span>
-                        <span className='font-bold text-lg'>
-                          ${calculateCost().toFixed(2)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className='space-y-2'>
-                <Label htmlFor='description'>Description (Optional)</Label>
-                <Textarea
-                  id='description'
-                  placeholder='Add a description for this VPS...'
-                  value={formData.description}
-                  onChange={e =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
-                />
-              </div>
-
-              <Alert>
-                <Shield className='h-4 w-4' />
-                <AlertDescription>
-                  Your VPS will be created with a randomly generated root
-                  password. You can change this password after creation from the
-                  VPS management panel.
-                </AlertDescription>
-              </Alert>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Navigation Buttons */}
-      <div className='flex justify-between'>
-        <Button
-          variant='outline'
-          onClick={handleBack}
-          disabled={step === 1 || loading}
-        >
-          Back
-        </Button>
-
-        <div className='flex gap-3'>
-          {step < 4 ? (
-            <Button onClick={handleNext} disabled={!canProceed() || loading}>
-              Next
-            </Button>
-          ) : (
-            <Button onClick={handleCreate} disabled={!canProceed() || loading}>
-              {loading ? (
-                <>
-                  <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                  Creating VPS...
-                </>
-              ) : (
-                <>
-                  <Server className='mr-2 h-4 w-4' />
-                  Create VPS
-                </>
-              )}
-            </Button>
-          )}
         </div>
       </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Basic Information */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Server className="h-5 w-5" />
+              Basic Information
+            </CardTitle>
+            <CardDescription>Configure your VPS name and description</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">VPS Name</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  placeholder="my-vps"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="description">Description (Optional)</Label>
+                <Input
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => handleInputChange('description', e.target.value)}
+                  placeholder="Web server for my application"
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Node and Template Selection */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Deployment Configuration</CardTitle>
+            <CardDescription>Select the node and template for your VPS</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="node">Node</Label>
+                <Select value={formData.node} onValueChange={(value) => handleInputChange('node', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a node" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {nodes.map((node: any) => (
+                      <SelectItem key={node.id} value={node.id}>
+                        <div className="flex items-center justify-between w-full">
+                          <span>{node.name}</span>
+                          <Badge variant="outline" className="ml-2">
+                            {node.location}
+                          </Badge>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="template">Template</Label>
+                <Select value={formData.template} onValueChange={(value) => handleInputChange('template', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a template" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {templates.map((template: any) => (
+                      <SelectItem key={template.id} value={template.id}>
+                        <div className="flex items-center justify-between w-full">
+                          <span>{template.name}</span>
+                          <Badge variant="outline" className="ml-2">
+                            {template.os}
+                          </Badge>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Resource Allocation */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Resource Allocation</CardTitle>
+            <CardDescription>Configure CPU, memory, storage, and network resources</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="cpu" className="flex items-center gap-2">
+                  <Cpu className="h-4 w-4" />
+                  CPU Cores
+                </Label>
+                <Select value={formData.cpu.toString()} onValueChange={(value) => handleInputChange('cpu', parseInt(value))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[1, 2, 4, 8, 16, 32].map(cores => (
+                      <SelectItem key={cores} value={cores.toString()}>
+                        {cores} cores
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="memory" className="flex items-center gap-2">
+                  <MemoryStick className="h-4 w-4" />
+                  Memory (GB)
+                </Label>
+                <Select value={formData.memory.toString()} onValueChange={(value) => handleInputChange('memory', parseInt(value))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[1, 2, 4, 8, 16, 32, 64, 128].map(memory => (
+                      <SelectItem key={memory} value={memory.toString()}>
+                        {memory} GB
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="disk" className="flex items-center gap-2">
+                  <HardDrive className="h-4 w-4" />
+                  Storage (GB)
+                </Label>
+                <Select value={formData.disk.toString()} onValueChange={(value) => handleInputChange('disk', parseInt(value))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[10, 20, 50, 100, 200, 500, 1000].map(disk => (
+                      <SelectItem key={disk} value={disk.toString()}>
+                        {disk} GB
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="network" className="flex items-center gap-2">
+                  <Network className="h-4 w-4" />
+                  Network (Mbps)
+                </Label>
+                <Select value={formData.network.toString()} onValueChange={(value) => handleInputChange('network', parseInt(value))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[100, 250, 500, 1000, 2500, 5000, 10000].map(bandwidth => (
+                      <SelectItem key={bandwidth} value={bandwidth.toString()}>
+                        {bandwidth} Mbps
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Summary */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Configuration Summary</CardTitle>
+            <CardDescription>Review your VPS configuration before creation</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div>
+                <p className="font-medium">VPS Name:</p>
+                <p className="text-gray-600">{formData.name || 'Not specified'}</p>
+              </div>
+              <div>
+                <p className="font-medium">Node:</p>
+                <p className="text-gray-600">{formData.node || 'Not selected'}</p>
+              </div>
+              <div>
+                <p className="font-medium">Template:</p>
+                <p className="text-gray-600">{formData.template || 'Not selected'}</p>
+              </div>
+              <div>
+                <p className="font-medium">Resources:</p>
+                <p className="text-gray-600">
+                  {formData.cpu} CPU, {formData.memory}GB RAM, {formData.disk}GB Storage, {formData.network}Mbps Network
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Actions */}
+        <div className="flex justify-end space-x-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => router.push('/dashboard/vps')}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            disabled={isCreating || !formData.name || !formData.node || !formData.template}
+          >
+            {isCreating ? (
+              <>
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                Creating VPS...
+              </>
+            ) : (
+              <>
+                <Plus className="h-4 w-4 mr-2" />
+                Create VPS
+              </>
+            )}
+          </Button>
+        </div>
+      </form>
     </div>
   );
 }

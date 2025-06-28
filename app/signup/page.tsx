@@ -71,7 +71,7 @@ export default function SignupPage() {
           <div className='flex justify-center mb-4'>
             <Server className='h-12 w-12 text-blue-600' />
           </div>
-          <CardTitle className='text-2xl'>Join Devloo Hosting</CardTitle>
+          <CardTitle className='text-2xl'>Join ProxPanel</CardTitle>
           <CardDescription>
             Create your account to start deploying VPS instances
           </CardDescription>

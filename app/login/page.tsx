@@ -41,10 +41,6 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        // Store user info in localStorage for client-side access
-        localStorage.setItem('user-email', data.user.email);
-        localStorage.setItem('user-role', data.user.role);
-
         // Redirect based on server response
         router.push(data.redirectUrl);
         router.refresh(); // Force a refresh to update auth state
@@ -57,19 +53,6 @@ export default function LoginPage() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Quick login function for demo credentials
-  const quickLogin = (demoEmail: string, demoPassword: string) => {
-    setEmail(demoEmail);
-    setPassword(demoPassword);
-    // Auto-submit after setting credentials
-    setTimeout(() => {
-      const form = document.querySelector('form') as HTMLFormElement;
-      if (form) {
-        form.requestSubmit();
-      }
-    }, 100);
   };
 
   return (
@@ -191,57 +174,6 @@ export default function LoginPage() {
           <div className='text-blue-200'>
             <Globe className='h-6 w-6 mx-auto mb-2 text-blue-400' />
             <p className='text-xs'>Global Network</p>
-          </div>
-        </div>
-
-        {/* Demo Credentials with Quick Login */}
-        <div className='mt-6 p-4 bg-blue-900/30 rounded-lg border border-blue-500/30'>
-          <p className='text-blue-200 text-sm text-center mb-3 font-semibold'>
-            🚀 Demo Credentials
-          </p>
-          <div className='space-y-3'>
-            <div className='text-xs text-blue-300 bg-blue-800/30 p-3 rounded border border-blue-500/20'>
-              <div className='flex justify-between items-start mb-2'>
-                <p className='text-blue-200 font-semibold'>👑 Admin Access</p>
-                <Button
-                  type='button'
-                  size='sm'
-                  variant='outline'
-                  className='h-6 px-2 text-xs bg-blue-600/20 border-blue-400/30 text-blue-200 hover:bg-blue-600/40'
-                  onClick={() => quickLogin('admin@proxpanel.com', 'demo123')}
-                  disabled={isLoading}
-                >
-                  Quick Login
-                </Button>
-              </div>
-              <p>
-                <strong>Email:</strong> admin@proxpanel.com
-              </p>
-              <p>
-                <strong>Password:</strong> demo123
-              </p>
-            </div>
-            <div className='text-xs text-blue-300 bg-blue-800/30 p-3 rounded border border-blue-500/20'>
-              <div className='flex justify-between items-start mb-2'>
-                <p className='text-blue-200 font-semibold'>👤 User Access</p>
-                <Button
-                  type='button'
-                  size='sm'
-                  variant='outline'
-                  className='h-6 px-2 text-xs bg-blue-600/20 border-blue-400/30 text-blue-200 hover:bg-blue-600/40'
-                  onClick={() => quickLogin('demo@proxpanel.com', 'demo123')}
-                  disabled={isLoading}
-                >
-                  Quick Login
-                </Button>
-              </div>
-              <p>
-                <strong>Email:</strong> demo@proxpanel.com
-              </p>
-              <p>
-                <strong>Password:</strong> demo123
-              </p>
-            </div>
           </div>
         </div>
       </div>

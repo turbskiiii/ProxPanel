@@ -7,39 +7,37 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
-      - DB_HOST=mysql
-      - DB_PORT=3306
-      - DB_USER=vps_user
-      - DB_PASSWORD=secure_password_123
-      - DB_NAME=vps_manager
-      - JWT_SECRET=your_super_secret_jwt_key_here_make_it_long_and_random
-      - PROXMOX_HOST=your-proxmox-server.com
+      - DATABASE_URL=mysql://proxpanel:ProxPanelSecure2024!@mysql:3306/proxpanel
+      - JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+      - PROXMOX_HOST=your-proxmox-host
+      - PROXMOX_USERNAME=your-proxmox-username
+      - PROXMOX_PASSWORD=your-proxmox-password
+      - PROXMOX_REALM=pve
       - PROXMOX_PORT=8006
-      - PROXMOX_USERNAME=root
-      - PROXMOX_PASSWORD=your_proxmox_password
-      - PROXMOX_REALM=pam
+      - PROXMOX_NODE=your-proxmox-node
     depends_on:
       - mysql
       - redis
-    restart: unless-stopped
     networks:
-      - devloo-network
+      - proxpanel-network
+    restart: unless-stopped
 
   mysql:
     image: mysql:8.0
     environment:
-      - MYSQL_ROOT_PASSWORD=root_password_123
-      - MYSQL_DATABASE=vps_manager
-      - MYSQL_USER=vps_user
-      - MYSQL_PASSWORD=secure_password_123
+      MYSQL_ROOT_PASSWORD: ProxPanelRoot2024!
+      MYSQL_DATABASE: proxpanel
+      MYSQL_USER: proxpanel
+      MYSQL_PASSWORD: ProxPanelSecure2024!
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./scripts/create-database.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./database/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
     ports:
       - "3306:3306"
-    restart: unless-stopped
     networks:
-      - devloo-network
+      - proxpanel-network
+    restart: unless-stopped
 
   redis:
     image: redis:7-alpine
@@ -47,9 +45,9 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
-    restart: unless-stopped
     networks:
-      - devloo-network
+      - proxpanel-network
+    restart: unless-stopped
 
   nginx:
     image: nginx:alpine
@@ -57,18 +55,18 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
       - ./ssl:/etc/nginx/ssl
     depends_on:
       - app
-    restart: unless-stopped
     networks:
-      - devloo-network
+      - proxpanel-network
+    restart: unless-stopped
 
 volumes:
   mysql_data:
   redis_data:
 
 networks:
-  devloo-network:
+  proxpanel-network:
     driver: bridge
