@@ -94,7 +94,7 @@
    ```
 3. **Clone and configure ProxPanel:**
    ```sh
-   git clone https://github.com/your-org/proxpanel.git
+   git clone https://github.com/turbskiiii/proxpanel.git
    cd proxpanel
    cp env.example .env.local
    # Edit .env.local with your secrets
