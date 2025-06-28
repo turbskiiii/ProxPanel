@@ -127,7 +127,7 @@ Future releases will include:
 
 ## 🙏 **Contributors**
 
-- **Lead Developer**: [Your Name]
+- **Lead Developer**: Aaron
 - **UI/UX Design**: shadcn/ui components
 - **Testing**: Community feedback and production testing
 
