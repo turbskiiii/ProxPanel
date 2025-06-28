@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: GitHub Community Support
+    url: https://github.com/turbskiiii/proxpanel/discussions
+    about: Please ask and answer questions here.
+  - name: Security Issues
+    url: https://github.com/turbskiiii/proxpanel/security/advisories
+    about: Please report security vulnerabilities here.
+  - name: Documentation
+    url: https://github.com/turbskiiii/proxpanel#readme
+    about: Please check the documentation first. 
