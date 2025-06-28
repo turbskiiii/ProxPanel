@@ -29,7 +29,7 @@
 
 1. **Clone the repo:**
    ```sh
-   git clone https://github.com/your-org/proxpanel.git
+   git clone https://github.com/turbskiiii/proxpanel.git
    cd proxpanel
    ```
 2. **Install dependencies:**
